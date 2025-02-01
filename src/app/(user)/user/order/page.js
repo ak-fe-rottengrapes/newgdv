@@ -1,4 +1,4 @@
-import OrderForm from "@/app/components/order/OrderForm";
+import OrderForm from "@/components/order/OrderForm";
 import { ToolProvider } from '@/app/context/ToolContext';
 
 export default function Order() {

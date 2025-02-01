@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Textarea } from "@/components/ui/textarea";
 
 export const AdditionalAccordion = () => {
     return (
@@ -12,7 +13,7 @@ export const AdditionalAccordion = () => {
             <AccordionItem value="additional" className="border-none data-[state=open]:bg-[#192028] data-[state=open]:rounded-lg">
                 <AccordionTrigger className="text-sm font-bold px-4">Additional Notes</AccordionTrigger>
                 <AccordionContent className="px-4">
-                    {/* Add additional parameters content */}
+                    <Textarea placeholder="Additional Notes"/>
                 </AccordionContent>
             </AccordionItem>
         </Accordion>

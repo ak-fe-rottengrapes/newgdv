@@ -1,10 +1,10 @@
-export default function Notifications() {
+'use client';
+import Notifications from "@/components/notification/Notifications";
+
+export default function page() {
   return (
-    <div className="h-full ">
-      <h1 className="text-2xl font-bold mb-4">Notifications</h1>
-      <div className="grid gap-4">
-        {/* Notifications list */}
-      </div>
-    </div>
+    <>
+      <Notifications />
+    </>
   );
 } 

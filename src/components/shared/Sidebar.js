@@ -3,12 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { 
-  Home, 
-  ShoppingCart, 
-  Bell, 
-  List, 
-  Search, 
+import {
+  Home,
+  ShoppingCart,
+  Bell,
+  List,
+  Search,
   User,
   PanelRightOpen,
   PanelRightClose,
@@ -16,6 +16,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { signOut } from 'next-auth/react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -54,7 +61,7 @@ export function Sidebar() {
     <>
       {/* Mobile Overlay */}
       {isMobileOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
@@ -71,8 +78,8 @@ export function Sidebar() {
         <div className="flex-1">
           <div className="flex h-16 items-center justify-between px-3 border-b border-gray-700">
             {!isCollapsed && <h2 className="text-lg font-semibold">Dashboard</h2>}
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               onClick={() => {
                 setIsCollapsed(!isCollapsed);
@@ -103,8 +110,8 @@ export function Sidebar() {
                       className={cn(
                         "flex items-center rounded-lg transition-colors",
                         isCollapsed ? "justify-center py-2" : "px-3 py-2",
-                        pathname === route.href 
-                          ? "bg-[#2b3a4a] text-white" 
+                        pathname === route.href
+                          ? "bg-[#2b3a4a] text-white"
                           : "text-gray-300 hover:bg-[#2b3a4a] hover:text-white"
                       )}
                       title={isCollapsed ? route.label : undefined}
@@ -120,21 +127,51 @@ export function Sidebar() {
             </div>
           </div>
         </div>
-        
+
         {/* Profile Section */}
         <div className={cn(
           "border-t border-gray-700 p-3 flex items-center",
           isCollapsed ? "justify-center" : "gap-3"
         )}>
-          <div className="w-8 h-8 rounded-full bg-[#2b3a4a] flex items-center justify-center text-white">
-            <User className="h-4 w-4" />
-          </div>
-          {!isCollapsed && (
-            <div>
-              <p className="text-sm font-medium text-white">John Doe</p>
-              <p className="text-xs text-gray-400">john@example.com</p>
-            </div>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-[#35495e] transition">
+                <div className="w-8 h-8 rounded-full bg-[#2b3a4a] flex items-center justify-center text-white">
+                  <User className="h-5 w-5" />
+                </div>
+                {!isCollapsed && (
+                  <span className="text-sm font-medium text-white">John Doe</span>
+                )}
+              </div>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent className="bg-[#212B35] text-white p-4 rounded-lg shadow-lg" align="end">
+              {/* User Info */}
+              <div className="mb-3 border-b border-gray-600 flex flex-col items-center pb-3">
+                <span className="text-md font-semibold text-white">John Doe</span>
+                <p className="text-xs text-gray-400">john@example.com</p>
+              </div>
+
+              {/* Menu Actions */}
+              <div className="flex flex-col gap-2">
+                <Button
+                  className="w-full text-blue-400 hover:bg-[#3c4f63] hover:text-white transition"
+                  variant="ghost"
+                  onClick={() => { /* Handle reset password */ }}
+                >
+                  Reset Password
+                </Button>
+                <Button
+                  className="w-full text-red-400 hover:bg-[#3c4f63] hover:text-white transition"
+                  variant="ghost"
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                >
+                  Logout
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
         </div>
       </nav>
 
@@ -162,4 +199,4 @@ export function Sidebar() {
       <div className="h-16 md:hidden" />
     </>
   );
-} 
+}

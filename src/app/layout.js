@@ -1,6 +1,8 @@
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MapProvider from './context/MapContext';
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata = {
   title: "Geodatavault",
@@ -13,9 +15,10 @@ export default function RootLayout({ children }) {
       <body
         className={``}
       >
-        <MapProvider>
-          {children}
-        </MapProvider>
+          <MapProvider>
+            {children}
+            <Toaster />
+          </MapProvider>
       </body>
     </html>
   );

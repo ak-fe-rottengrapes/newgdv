@@ -1,6 +1,7 @@
 'use client';
 import { Sidebar } from '@/components/shared/Sidebar';
-import MapComponent from '../shared/Map';
+import MapComponent from '@/components/shared/Map';
+
 
 export const UserLayout = ({ children }) => {
   return (
