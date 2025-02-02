@@ -1,6 +1,5 @@
 "use client"
-import React from 'react'
-import { useState, useContext, useCallback } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -17,8 +16,41 @@ import { ONA } from './accordions/ONA';
 import { AdditionalAccordion } from './accordions/AdditionalAccordion';
 import { MapContext } from '@/app/context/MapContext';
 import { fromLonLat } from 'ol/proj';
+import { useTool } from '@/app/context/ToolContext';
+import { useRouter } from 'next/navigation';
 
 const OrderForm = () => {
+    const router = useRouter();
+    const { activeTool,
+        setActiveTool,
+        imagery_type,
+        setImageryType,
+        resolution,
+        setResolution,
+        area,
+        setArea,
+        cloud_cover_percentage,
+        setCloudCoverPercentage,
+        date_from,
+        setDateFrom,
+        date_to,
+        setDateTo,
+        location,
+        setLocation,
+        name,
+        setName,
+        note,
+        setNote,
+        ona_percentage,
+        setOnaPercentage,
+        operators,
+        setOperators,
+        order_type,
+        setOrderType,
+        satellite_data,
+        setSatelliteData,
+        operatorGeoData,
+        setOperaorGeoData } = useTool();
     const [selectedButton, setSelectedButton] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [searchResults, setSearchResults] = useState([]);
@@ -68,72 +100,100 @@ const OrderForm = () => {
         };
     }
 
+    
+
+    const handleSubmit = () => {
+        console.log("location:", location);
+        console.log("area:", area);
+        console.log("imagery_type:", imagery_type);
+        console.log("resolution:", resolution);
+        console.log("operators:", operators);
+        console.log("date_from:", date_from);
+        console.log("date_to:", date_to);
+        console.log("order_type:", order_type);
+    
+        if (
+            location &&
+            area !== null &&
+            imagery_type !== "" &&
+            resolution !== null &&
+            operators.length > 0 &&
+            date_from !== "" &&
+            date_to !== "" &&
+            order_type !== ""
+        ) {
+            router.push("/user/searchproduct")
+        } else {
+            console.log('Fill all fields');
+        }
+    };
+    
+
+
     return (
-        <ToolProvider>
-            <div className='flex flex-col'>
-                <div className='flex flex-col gap-6'>
-                    <div className='w-full bg-[#2b3a4a] text-center rounded-md p-2'>
-                        <h1>Order Imagery</h1>
-                    </div>
-                    <div className='w-full rounded-md flex'>
-                        <Button
-                            variant="outline"
-                            className={`rounded-r-none border-r-0 flex-1 bg-[#2b3a4a] hover:bg-[#212B35] hover:text-white ${selectedButton === "archive" ? "bg-[#212B35] text-white" : ""}`}
-                            onClick={() => setSelectedButton("archive")}
-                        >
-                            Archive Imagery
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className={`rounded-l-none flex-1 bg-[#2b3a4a] hover:bg-[#212B35] hover:text-white ${selectedButton === "new" ? "bg-[#212B35] text-white" : ""}`}
-                            onClick={() => setSelectedButton("new")}
-                        >
-                            New tasking
-                        </Button>
-                    </div>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                        <Input 
-                            placeholder='Search' 
-                            className="pl-10" 
-                            value={searchTerm}
-                            onChange={handleSearch}
-                        />
-                        {searchResults.length > 0 && (
-                            <div className="absolute w-full bg-[#2b3a4a] mt-1 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto ">
-                                {searchResults.map((result, index) => (
-                                    <div
-                                        key={index}
-                                        className="px-4 py-2 hover:bg-[#212B35] cursor-pointer"
-                                        onClick={() => handleLocationSelect(result)}
-                                    >
-                                        {result.display_name}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    <div className='flex justify-between'>
-                        <FileUploader />
-                        <DrawPolygon />
-                        <Rectangle />
-                    </div>
-                    <div className="space-y-2 overflow-y-auto h-[calc(100vh-350px)] flex flex-col gap-2">
-                        <DateAccordion />
-                        <TypeOfImagery />
-                        <ResolutionAccordion />
-                        <SelectOperatorAccordion />
-                        <CloudCoverAccordion />
-                        <ONA />
-                        <AdditionalAccordion />
-                    </div>
-                    <div className='flex justify-between  w-full gap-2'>
-                        <Button className='w-full bg-[#2b3a4a] hover:bg-[#192028] text-white'>Cancel</Button>
-                        <Button className='w-full bg-[#2b3a4a] hover:bg-[#192028] text-white'>Submit</Button>
-                    </div>
+        <div className='flex flex-col'>
+            <div className='flex flex-col gap-6'>
+                <div className='w-full bg-[#2b3a4a] text-center rounded-md p-2'>
+                    <h1>Order Imagery</h1>
+                </div>
+                <div className='w-full rounded-md flex'>
+                    <Button
+                        variant="outline"
+                        className={`rounded-r-none border-r-0 flex-1 bg-[#2b3a4a] hover:bg-[#212B35] hover:text-white ${order_type === "ArchiveImagery" ? "bg-[#212B35] text-white" : ""}`}
+                        onClick={() => setOrderType("ArchiveImagery")}
+                    >
+                        Archive Imagery
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className={`rounded-l-none flex-1 bg-[#2b3a4a] hover:bg-[#212B35] hover:text-white ${order_type === "NewImagery" ? "bg-[#212B35] text-white" : ""}`}
+                        onClick={() => setOrderType("NewImagery")}
+                    >
+                        New tasking
+                    </Button>
+                </div>
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <Input
+                        placeholder='Search'
+                        className="pl-10"
+                        value={searchTerm}
+                        onChange={handleSearch}
+                    />
+                    {searchResults.length > 0 && (
+                        <div className="absolute w-full bg-[#2b3a4a] mt-1 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto ">
+                            {searchResults.map((result, index) => (
+                                <div
+                                    key={index}
+                                    className="px-4 py-2 hover:bg-[#212B35] cursor-pointer"
+                                    onClick={() => handleLocationSelect(result)}
+                                >
+                                    {result.display_name}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <div className='flex justify-between'>
+                    <FileUploader />
+                    <DrawPolygon />
+                    <Rectangle />
+                </div>
+                <div className="space-y-2 overflow-y-auto h-[calc(100vh-350px)] flex flex-col gap-2">
+                    <DateAccordion />
+                    <TypeOfImagery />
+                    <ResolutionAccordion />
+                    <SelectOperatorAccordion />
+                    <CloudCoverAccordion />
+                    <ONA />
+                    <AdditionalAccordion />
+                </div>
+                <div className='flex justify-between  w-full gap-2'>
+                    <Button className='w-full bg-[#2b3a4a] hover:bg-[#192028] text-white'>Cancel</Button>
+                    <Button className='w-full bg-[#2b3a4a] hover:bg-[#192028] text-white' onClick={() => handleSubmit()}>Submit</Button>
                 </div>
             </div>
-        </ToolProvider>
+        </div>
     )
 }
 

@@ -10,11 +10,12 @@ import { Vector as VectorSource } from 'ol/source';
 import { Circle as CircleStyle, Fill, Stroke, Style, Text } from 'ol/style';
 import { getArea } from 'ol/sphere';
 import { useToast } from '@/hooks/use-toast';
+import { GeoJSON } from 'ol/format';
 
 const DrawPolygon = () => {
     const { toast } = useToast();
     const { map } = useContext(MapContext);
-    const { activeTool, setActiveTool } = useTool();
+    const { activeTool, setActiveTool, setOperaorGeoData, setLocation, setArea } = useTool();
     const isActive = activeTool === 'polygon';
     const [drawInteraction, setDrawInteraction] = useState(null);
     const [modifyInteraction, setModifyInteraction] = useState(null);
@@ -117,6 +118,23 @@ const DrawPolygon = () => {
                         variant: "destructive",
                         duration: 1000,
                     });
+                } else {
+                    const geoData = {
+                        type: "FeatureCollection",
+                        features: [new GeoJSON().writeFeatureObject(feature, {
+                            featureProjection: 'EPSG:3857',
+                            dataProjection: 'EPSG:4326'
+                        })]
+                    };
+                    setOperaorGeoData(geoData);
+
+                    const simplifiedData = {
+                        type: "Polygon",
+                        coordinates: feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326').getCoordinates()
+                    };
+                    setLocation(simplifiedData);
+                    setArea(parseFloat(area.toFixed(2)));
+
                 }
             });
         });
@@ -134,7 +152,23 @@ const DrawPolygon = () => {
                     status: 'error',
                     variant: "destructive",
                     duration: 1000,
-                })
+                });
+            } else {
+                const geoData = {
+                    type: "FeatureCollection",
+                    features: [new GeoJSON().writeFeatureObject(feature, {
+                        featureProjection: 'EPSG:3857',
+                        dataProjection: 'EPSG:4326'
+                    })]
+                };
+                setOperaorGeoData(geoData);
+
+                const simplifiedData = {
+                    type: "Polygon",
+                    coordinates: feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326').getCoordinates()
+                };
+                setLocation(simplifiedData);
+                setArea(parseFloat(area.toFixed(2)));
             }
         });
 
@@ -157,6 +191,7 @@ const DrawPolygon = () => {
                 onClick={handleDrawPolygonClick}
                 disabled={false}
             >
+            
                 <PiPolygonDuotone className={`h-4 w-4 ${isActive ? 'text-white' : ''}`} />
             </Button>
         </div>

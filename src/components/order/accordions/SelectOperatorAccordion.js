@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -10,8 +10,9 @@ import {
 import Image from "next/image";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTool } from '@/app/context/ToolContext';
 
-const operators = [
+const operatorOptions = [
   {
     id: 'jilin',
     label: 'JILIN',
@@ -51,11 +52,19 @@ const operators = [
 ];
 
 export const SelectOperatorAccordion = ({ isDisabled = false, onOperatorChange }) => {
-  const [selectedOperator, setSelectedOperator] = useState('');
+  const { operators, setOperators } = useTool();
+  const [selectedOperators, setSelectedOperators] = useState([]);
 
   const handleOperatorChange = (value) => {
-    setSelectedOperator(value);
-    onOperatorChange?.(value);
+    let updatedOperators;
+    if (selectedOperators.includes(value)) {
+      updatedOperators = selectedOperators.filter(operator => operator !== value);
+    } else {
+      updatedOperators = [...selectedOperators, value];
+    }
+    setSelectedOperators(updatedOperators);
+    setOperators(updatedOperators);
+    onOperatorChange?.(updatedOperators);
   };
 
   return (
@@ -73,27 +82,22 @@ export const SelectOperatorAccordion = ({ isDisabled = false, onOperatorChange }
           <AccordionTrigger className="text-sm font-bold px-4 py-3">
             <div className="flex items-center gap-2">
               Select Operator
-              <Tooltip>
-                <TooltipContent>
-                  Choose your preferred satellite operator
-                </TooltipContent>
-              </Tooltip>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">
             <div className="grid grid-cols-2 gap-4">
-              {operators.map((operator) => (
+              {operatorOptions.map((operator) => (
                 <div key={operator.id} className="relative">
                   <label 
                     className="block cursor-pointer group"
                     htmlFor={operator.id}
                   >
                     <input
-                      type="radio"
+                      type="checkbox"
                       id={operator.id}
                       value={operator.value}
                       name="operator"
-                      checked={selectedOperator === operator.value}
+                      checked={selectedOperators.includes(operator.value)}
                       onChange={() => handleOperatorChange(operator.value)}
                       className="hidden peer"
                     />
@@ -108,7 +112,7 @@ export const SelectOperatorAccordion = ({ isDisabled = false, onOperatorChange }
                       />
                       <div className="absolute bottom-2 left-2 flex items-center gap-2">
                         <div className="h-4 w-4 rounded-full border-2 border-white transition-colors duration-200 peer-checked:bg-white flex items-center justify-center">
-                          <div className={`h-2 w-2 rounded-full ${selectedOperator === operator.value ? 'bg-white' : ''}`}></div>
+                          <div className={`h-2 w-2 rounded-full ${selectedOperators.includes(operator.value) ? 'bg-white' : ''}`}></div>
                         </div>
                         <span className="text-sm font-medium text-white drop-shadow-md">
                           {operator.label}

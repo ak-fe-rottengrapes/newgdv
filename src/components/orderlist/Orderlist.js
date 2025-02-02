@@ -20,6 +20,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "../ui/skeleton";
 
 const dummyOrders = [
     {
@@ -145,9 +146,49 @@ const Orderlist = () => {
 
 
             {loading ? (
-                <div className="flex justify-center items-center h-96">
-                    {/* <Spinner /> */}
-                    <p className="text-white">Loading...</p>
+                <div className="border rounded-lg mt-4 p-2 h-[calc(100vh-100px)] overflow-y-auto">
+                
+                  {/* Repeat this skeleton block multiple times for loading effect */}
+                  {[...Array(3)].map((_, index) => (
+                    <div key={index} className="border shadow-lg rounded my-2 p-2 w-full relative animate-pulse">
+                      <div className="flex">
+                        {/* Icon Skeleton */}
+                        <div className="h-8 w-8 rounded-full bg-gray-200" />
+                        
+                        <div className="ml-1 mt-3 w-full">
+                          {/* Title Skeleton */}
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                          
+                          <div className="text-xs font-normal w-44">
+                            {/* Multiple Info Rows */}
+                            {[...Array(5)].map((_, i) => (
+                              <div key={i} className="mx-2 my-2 w-full flex justify-between">
+                                <div className="h-3 bg-gray-200 rounded w-1/2" />
+                                <div className="h-4 w-4 bg-gray-200 rounded-full" />
+                              </div>
+                            ))}
+                            
+                            {/* Status Row */}
+                            <div className="mx-2 my-2 w-full flex justify-between">
+                              <div className="h-3 bg-gray-200 rounded w-1/3" />
+                              <div className="h-4 w-4 bg-gray-200 rounded-full" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+              
+                      {/* Date Skeleton */}
+                      <div className="absolute right-0 top-0 p-1 m-1">
+                        <div className="h-3 bg-gray-200 rounded w-24" />
+                      </div>
+              
+                      {/* Action Buttons Skeleton */}
+                      <div className="absolute right-2 top-12 space-y-3">
+                        <div className="h-7 w-7 bg-gray-200 rounded-full" />
+                        <div className="h-7 w-7 bg-gray-200 rounded-full" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
             ) : (
 

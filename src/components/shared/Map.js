@@ -15,7 +15,8 @@ import { MapContext } from '@/app/context/MapContext';
 const MapComponent = () => {
   const { map, setMap, baseMap, selectedMap, handleMapChange } = useContext(MapContext);
   const [expand, setExpand] = useState(false);
-  
+  const [currentMapImage, setCurrentMapImage] = useState('/assets/map/standard_roadmap.png');
+
   useEffect(() => {
     const mapInstance = new Map({
       target: 'map',
@@ -43,6 +44,12 @@ const MapComponent = () => {
     };
   }, [baseMap, setMap]);
 
+  const handleMapSelection = (type, image, name) => {
+    handleMapChange(type, image, name);
+    setCurrentMapImage(image);
+    setExpand(false);
+  };
+
   return (
     <div className="relative h-full w-full">
       <div id="map" className="w-full h-full absolute inset-0" />
@@ -54,12 +61,12 @@ const MapComponent = () => {
           onClick={() => setExpand(!expand)}
         >
           <Image
-            src={selectedMap.image}
+            src={currentMapImage}
             alt="current map style"
             width={56}
             height={56}
             className="w-14 h-14 rounded-md"
-            title={selectedMap.name}
+            title={selectedMap.name || 'Road'}
           />
         </button>
 
@@ -67,10 +74,7 @@ const MapComponent = () => {
           <div className="flex gap-2 animate-fadeIn">
             <button 
               className="bg-white  rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200"
-              onClick={() => {
-                setExpand(false);
-                handleMapChange('m', '/assets/map/standard_roadmap.png', 'Road')
-              }}
+              onClick={() => handleMapSelection('m', '/assets/map/standard_roadmap.png', 'Road')}
             >
               <Image
                 src="/assets/map/standard_roadmap.png"
@@ -83,7 +87,7 @@ const MapComponent = () => {
             </button>
             <button 
               className="bg-white  rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200"
-              onClick={() => handleMapChange('s', '/assets/map/Terrain_Map.jpg', 'Terrain')}
+              onClick={() => handleMapSelection('s', '/assets/map/Terrain_Map.jpg', 'Terrain')}
             >
               <Image
                 src="/assets/map/Terrain_Map.jpg"
@@ -96,7 +100,7 @@ const MapComponent = () => {
             </button>
             <button 
               className="bg-white  rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200"
-              onClick={() => handleMapChange('y', '/assets/map/hybrid.png', 'Hybrid')}
+              onClick={() => handleMapSelection('y', '/assets/map/hybrid.png', 'Hybrid')}
             >
               <Image
                 src="/assets/map/hybrid.png"

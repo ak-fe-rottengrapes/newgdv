@@ -23,11 +23,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from '../ui/label';
+import { Input } from '../ui/input';
+import { resetPassword } from '../services/profile/api';
+import { useSession } from 'next-auth/react';
+import { useToast } from '@/hooks/use-toast';
 
 export function Sidebar() {
+  const { data: session } = useSession();
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [email, setEmail] = useState(session?.user?.email || "");
+  const [new_password, setNew_password] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const routes = [
     {
@@ -56,6 +75,37 @@ export function Sidebar() {
       href: '/user/searchproduct',
     },
   ];
+
+  const handleResetPassword = async () => {
+    try {
+      setIsLoading(true);
+      const data = {
+        email: email,
+        new_password: new_password,
+      }
+      await resetPassword(session?.user?.access, data);
+      toast({
+        title: 'Success',
+        description: 'Password reset successfully',
+        status: 'success',
+        duration: 2000,
+        className: 'bg-green-100 text-black',
+      });
+      setOpen(false);
+    } catch (error) {
+      console.log(error);
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: "destructive",
+        status: 'error',
+        duration: 2000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   return (
     <>
@@ -128,6 +178,42 @@ export function Sidebar() {
           </div>
         </div>
 
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogContent className="sm:max-w-[425px] bg-[#212B35] text-white border border-gray-700 rounded-lg">
+            <DialogHeader>
+              <DialogTitle>Reset Password</DialogTitle>
+              <DialogDescription>
+                Enter your new password below. Click save when you're done.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="email" className="text-right">
+                  Email
+                </Label>
+                <Input id="email" value={email} className="col-span-3" onChange={(e) => setEmail(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="new_password" className="text-right">
+                  New Password
+                </Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={new_password}
+                  onChange={(e) => setNew_password(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" onClick={handleResetPassword}>
+                {isLoading ? "Loading..." : "Reset Password"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Profile Section */}
         <div className={cn(
           "border-t border-gray-700 p-3 flex items-center",
@@ -140,7 +226,7 @@ export function Sidebar() {
                   <User className="h-5 w-5" />
                 </div>
                 {!isCollapsed && (
-                  <span className="text-sm font-medium text-white">John Doe</span>
+                  <span className="text-sm font-medium text-white">{`${session?.user?.first_name} ${session?.user?.last_name}`}</span>
                 )}
               </div>
             </DropdownMenuTrigger>
@@ -148,8 +234,8 @@ export function Sidebar() {
             <DropdownMenuContent className="bg-[#212B35] text-white p-4 rounded-lg shadow-lg" align="end">
               {/* User Info */}
               <div className="mb-3 border-b border-gray-600 flex flex-col items-center pb-3">
-                <span className="text-md font-semibold text-white">John Doe</span>
-                <p className="text-xs text-gray-400">john@example.com</p>
+                <span className="text-md font-semibold text-white">{`${session?.user?.first_name} ${session?.user?.last_name}`}</span>
+                <p className="text-xs text-gray-400">{session?.user?.email}</p>
               </div>
 
               {/* Menu Actions */}
@@ -157,7 +243,7 @@ export function Sidebar() {
                 <Button
                   className="w-full text-blue-400 hover:bg-[#3c4f63] hover:text-white transition"
                   variant="ghost"
-                  onClick={() => { /* Handle reset password */ }}
+                  onClick={() => { setOpen(true); }}
                 >
                   Reset Password
                 </Button>

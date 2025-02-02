@@ -12,11 +12,12 @@ import { getArea } from 'ol/sphere';
 import { useToast } from '@/hooks/use-toast';
 import { createBox } from 'ol/interaction/Draw';
 import { fromExtent } from 'ol/geom/Polygon';
+import { GeoJSON } from 'ol/format';
 
 const Rectangle = () => {
     const { toast } = useToast();
     const { map } = useContext(MapContext);
-    const { activeTool, setActiveTool } = useTool();
+    const { activeTool, setActiveTool, setOperaorGeoData, setLocation, setArea } = useTool();
     const isActive = activeTool === 'rectangle';
     const [drawInteraction, setDrawInteraction] = useState(null);
     const [modifyInteraction, setModifyInteraction] = useState(null);
@@ -129,6 +130,22 @@ const Rectangle = () => {
                         variant: "destructive",
                         duration: 1000,
                     });
+                } else {
+                    const geoData = {
+                        type: "FeatureCollection",
+                        features: [new GeoJSON().writeFeatureObject(feature, {
+                            featureProjection: 'EPSG:3857',
+                            dataProjection: 'EPSG:4326'
+                        })]
+                    };
+                    setOperaorGeoData(geoData);
+
+                    const simplifiedData = {
+                        type: "Polygon",
+                        coordinates: feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326').getCoordinates()
+                    };
+                    setLocation(simplifiedData);
+                    setArea(parseFloat(area.toFixed(2)));
                 }
             });
         });
@@ -147,6 +164,22 @@ const Rectangle = () => {
                     variant: "destructive",
                     duration: 1000,
                 });
+            } else {
+                const geoData = {
+                    type: "FeatureCollection",
+                    features: [new GeoJSON().writeFeatureObject(feature, {
+                        featureProjection: 'EPSG:3857',
+                        dataProjection: 'EPSG:4326'
+                    })]
+                };
+                setOperaorGeoData(geoData);
+
+                const simplifiedData = {
+                    type: "Polygon",
+                    coordinates: feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326').getCoordinates()
+                };
+                setLocation(simplifiedData);
+                setArea(parseFloat(area.toFixed(2)));
             }
         });
 

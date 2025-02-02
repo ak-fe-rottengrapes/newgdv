@@ -16,6 +16,9 @@ export const authOption = {
         token.is_admin = user.is_admin;
         token.is_employee = user.is_employee;
         token.user_id = user.id; 
+        token.email = user.email;
+        token.first_name = user.first_name;
+        token.last_name = user.last_name;
       }
       return token;
     },
@@ -26,6 +29,9 @@ export const authOption = {
       session.user.is_admin = token.is_admin;
       session.user.is_employee = token.is_employee;
       session.user.user_id = token.user_id;
+      session.user.email = token.email;
+      session.user.first_name = token.first_name;
+      session.user.last_name = token.last_name;
       return session;
     },
   },
@@ -54,14 +60,17 @@ export const authOption = {
           if (user) {
             if (!user.profile_complete || !user.is_active) {
               const errorMessage = `Account Issue: ${user.error || "Please complete your profile."}`;
-
+              // throw new Error(errorMessage);
             }
 
             return {
               ...user,
               is_admin: user.account.is_admin,
               is_employee: user.account.is_employee,
-              id: user.account.id, 
+              id: user.account.id,  
+              email: user.account.email,
+              first_name: user.account.first_name,
+              last_name: user.account.last_name,
             };
           } else {
             throw new Error("Invalid credentials or response data.");

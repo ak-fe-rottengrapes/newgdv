@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import Image from "next/image";
 import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTool } from '@/app/context/ToolContext';
 
 const resolutionTypes = [
   {
@@ -44,16 +45,17 @@ const resolutionTypes = [
 ];
 
 const resolutionMarkers = [
-  { value: -1, label: '15cm' },
-  { value: 0, label: '30cm' },
-  { value: 1, label: '50cm' },
-  { value: 2, label: '80cm' },
-  { value: 3, label: '1m' },
-  { value: 4, label: '3m' },
-  { value: 5, label: '5m' }
+  { value: -1, label: '15cm', number: 15 },
+  { value: 0, label: '30cm', number: 30 },
+  { value: 1, label: '50cm', number: 50 },
+  { value: 2, label: '80cm', number: 80 },
+  { value: 3, label: '1m', number: 100 },
+  { value: 4, label: '3m', number: 300 },
+  { value: 5, label: '5m', number: 500 }
 ];
 
 export const ResolutionAccordion = ({ isDisabled = false, onResolutionChange }) => {
+  const { resolution, setResolution, } = useTool();
   const [sliderValue, setSliderValue] = useState(-1);
   const [selectedResolution, setSelectedResolution] = useState('super_high');
   const [tooltipValue, setTooltipValue] = useState('15 cm');
@@ -66,37 +68,45 @@ export const ResolutionAccordion = ({ isDisabled = false, onResolutionChange }) 
   const updateResolutionFromSlider = (value) => {
     let newResolution;
     let newTooltipValue;
+    let resolutionNumber;
 
     switch (value) {
       case -1:
       case 0:
         newResolution = 'super_high';
         newTooltipValue = value === -1 ? '15 cm' : '30 cm';
+        resolutionNumber = value === -1 ? 15 : 30;
         break;
       case 1:
         newResolution = 'very_high';
         newTooltipValue = '50 cm';
+        resolutionNumber = 50;
         break;
       case 2:
       case 3:
         newResolution = 'high';
         newTooltipValue = value === 2 ? '80 cm' : '1 m';
+        resolutionNumber = value === 2 ? 80 : 100;
         break;
       case 4:
       case 5:
         newResolution = 'medium';
         newTooltipValue = value === 4 ? '3 m' : '5 m';
+        resolutionNumber = value === 4 ? 300 : 500;
         break;
     }
 
     setSelectedResolution(newResolution);
     setTooltipValue(newTooltipValue);
+    setResolution(resolutionNumber);
     onResolutionChange?.({ resolution: newResolution, value: newTooltipValue });
   };
 
   const handleResolutionSelect = (value, defaultSliderValue) => {
     setSelectedResolution(value);
     setSliderValue(defaultSliderValue);
+    const resolutionNumber = resolutionMarkers[defaultSliderValue + 1].number;
+    setResolution(resolutionNumber);
     onResolutionChange?.({ resolution: value, value: resolutionMarkers[defaultSliderValue + 1].label });
   };
 
@@ -115,12 +125,6 @@ export const ResolutionAccordion = ({ isDisabled = false, onResolutionChange }) 
           <AccordionTrigger className="text-sm font-bold px-4 py-3">
             <div className="flex items-center gap-2">
               Resolution
-              <Tooltip>
-             
-                <TooltipContent>
-                  Select the resolution level for your imagery
-                </TooltipContent>
-              </Tooltip>
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-4 pb-4">

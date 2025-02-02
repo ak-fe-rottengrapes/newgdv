@@ -24,12 +24,15 @@ import JSZip from 'jszip';
 
 const FileUploader = () => {
     const { map, setMap } = useContext(MapContext);
-    const { activeTool, setActiveTool } = useTool();
+    const { activeTool, setActiveTool, location,
+        setLocation, operatorGeoData,
+        setOperaorGeoData,area,  setArea } = useTool();
     const isActive = activeTool === 'fileUpload';
     const [open, setOpen] = useState(false);
     const [files, setFiles] = useState([]);
     const [warning, setWarning] = useState('');
     const [vectorLayer, setVectorLayer] = useState(null);
+    
 
     const onDrop = useCallback((acceptedFiles) => {
         setFiles(acceptedFiles);
@@ -142,6 +145,28 @@ const FileUploader = () => {
                     setVectorLayer(newVectorLayer);
                     const extent = vectorSource.getExtent();
                     map.getView().fit(extent, { duration: 1000 });
+
+                    // Set the polygon data in the specified format
+                    const geoData = {
+                        type: "FeatureCollection",
+                        features: features.map(feature => ({
+                            type: "Feature",
+                            geometry: feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326').getCoordinates(),
+                            properties: {
+                                name: "polygon",
+                                description: "Drawn polygon"
+                            }
+                        }))
+                    };
+                    setOperaorGeoData(geoData);
+
+                    const simplifiedData = {
+                        type: "Polygon",
+                        coordinates: features[0].getGeometry().clone().transform('EPSG:3857', 'EPSG:4326').getCoordinates()
+                    };
+                    setLocation(simplifiedData);
+                    setArea(parseFloat(area.toFixed(2)));
+
                     setOpen(false);
                 }
             };
@@ -152,6 +177,12 @@ const FileUploader = () => {
             }
         }
     };
+
+    useEffect(() => {
+        console.log('operatorGeoData', operatorGeoData);
+        console.log('location', location);
+        console.log('area', area);
+    })
 
     useEffect(() => {
         if (!open) {

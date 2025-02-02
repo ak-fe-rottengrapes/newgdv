@@ -19,6 +19,7 @@ const MapProvider = ({ children }) => {
   const [map, setMap] = useState(defaultProvider.map);
   const [baseMap, setBaseMap] = useState(defaultProvider.baseMap);
   const [selectedMap, setSelectedMap] = useState(defaultProvider.selectedMap);
+  const [hoverGeoJonData, setHoverGeoJsonData] = useState(defaultProvider.hoverGeoJonData);
 
   const handleMapChange = (type, image, name) => {
     setBaseMap(type);
@@ -31,6 +32,8 @@ const MapProvider = ({ children }) => {
     baseMap,
     selectedMap,
     handleMapChange,
+    hoverGeoJonData, 
+    setHoverGeoJsonData
   };
 
   return <MapContext.Provider value={values}>{children}</MapContext.Provider>;

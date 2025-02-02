@@ -13,7 +13,7 @@ export const getOrders = async (token) => {
 
         return response.data;
     } catch (error) {
-        throw new Error(error.response ? error.response.data : "Failed to fetch order list");
+        throw new Error(error.response ? error.response.data.detail : "Failed to fetch order list");
     }
 }
 

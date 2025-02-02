@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Accordion,
   AccordionContent,
@@ -9,6 +9,7 @@ import {
 import Image from "next/image";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Info } from "lucide-react";
+import { useTool } from '@/app/context/ToolContext';
 
 const imageryTypes = [
   {
@@ -27,24 +28,26 @@ const imageryTypes = [
   },
   {
     id: 'multiSpectral',
-    label: 'Multi-Spectral',
-    value: 'Multi-Spectral',
+    label: 'Multispectral',
+    value: 'Multispectral',
     imagePath: '/assets/multispectral.png',
     description: 'Multiple wavelength bands for detailed surface analysis'
   },
   {
     id: 'nightTime',
-    label: 'Nighttime',
-    value: 'Nighttime',
+    label: 'Night-time',
+    value: 'Night-time',
     imagePath: '/assets/nighttime.png',
     description: 'Infrared imagery captured during nighttime hours'
   }
 ];
 
-export const TypeOfImagery = ({ onTypeChange }) => {
+export const TypeOfImagery = ({ isDisabled, onTypeChange }) => {
+    const { imagery_type, setImageryType, } = useTool();
     const [selectedType, setSelectedType] = useState('');
 
     const handleChange = (value) => {
+        setImageryType(value);
         setSelectedType(value);
         onTypeChange?.(value);
     };
@@ -59,6 +62,7 @@ export const TypeOfImagery = ({ onTypeChange }) => {
                 <AccordionItem 
                     value="producttype" 
                     className="border-none data-[state=open]:bg-[#192028] data-[state=open]:rounded-lg"
+                    disabled={isDisabled}
                 >
                     <AccordionTrigger className="text-sm font-bold px-4 py-3">
                         <div className="flex items-center gap-2">
