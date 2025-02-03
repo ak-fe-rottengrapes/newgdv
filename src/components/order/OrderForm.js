@@ -18,6 +18,7 @@ import { MapContext } from '@/app/context/MapContext';
 import { fromLonLat } from 'ol/proj';
 import { useTool } from '@/app/context/ToolContext';
 import { useRouter } from 'next/navigation';
+import { Vector as VectorLayer } from 'ol/layer';
 
 const OrderForm = () => {
     const router = useRouter();
@@ -128,7 +129,32 @@ const OrderForm = () => {
         }
     };
     
+    const handleCancel = () => {
+        setActiveTool(null);
+        setImageryType('');
+        setResolution(null);
+        setArea(null);
+        setCloudCoverPercentage(10);
+        setDateFrom('');
+        setDateTo('');
+        setLocation(null);
+        setName('');
+        setNote('');
+        setOnaPercentage(10);
+        setOperators([]);
+        setOrderType('');
+        setSatelliteData(null);
+        setOperaorGeoData(null);
 
+        // Remove only vector layers from the map
+        const layers = map.getLayers().getArray();
+        layers.forEach(layer => {
+            if (layer instanceof VectorLayer) {
+                map.removeLayer(layer);
+            }
+        });
+        
+    }
 
     return (
         <div className='flex flex-col'>
@@ -189,7 +215,7 @@ const OrderForm = () => {
                     <AdditionalAccordion />
                 </div>
                 <div className='flex justify-between  w-full gap-2'>
-                    <Button className='w-full bg-[#2b3a4a] hover:bg-[#192028] text-white'>Cancel</Button>
+                    <Button className='w-full bg-[#2b3a4a] hover:bg-[#192028] text-white' onClick={() => handleCancel()}>Cancel</Button>
                     <Button className='w-full bg-[#2b3a4a] hover:bg-[#192028] text-white' onClick={() => handleSubmit()}>Submit</Button>
                 </div>
             </div>

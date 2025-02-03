@@ -70,7 +70,8 @@ const Orderlist = () => {
         const fetchOrders = async () => {
             try {
                 setLoading(true);
-                const response = getOrders(session?.user?.access);
+                const response = await getOrders(session?.user?.access);
+                setOrderList(response); // Update to handle the new data structure
             } catch (error) {
                 toast({
                     title: 'Error',
@@ -85,14 +86,6 @@ const Orderlist = () => {
         }
         fetchOrders();
     }, [session?.user?.access])
-
-    useEffect(() => {
-        setLoading(true);
-        setTimeout(() => {
-            setOrderList(dummyOrders);
-            setLoading(false);
-        }, 1000);
-    }, [reload]);
 
 
     const onEditClick = (id) => {
@@ -109,6 +102,13 @@ const Orderlist = () => {
             setIsDelete(true);
             await deleteOrder(session?.user?.access, deleteId);
             setOrderList((prevList) => prevList.filter((order) => order.id !== deleteId));
+            toast({
+                title: 'Success',
+                description: 'Order deleted successfully',
+                className: 'bg-green-100',
+                status: 'success',
+                duration: 2000,
+            })
         } catch (error) {
             toast({
                 title: 'Error',
@@ -237,8 +237,8 @@ const Orderlist = () => {
                                     <h1 style={{ color: "white" }} className="text-base font-semibold mx-2 my-1 text-wrap">{ele.name}</h1>
                                     <div className="flex text-xs font-normal w-44" style={{ color: "white" }}>
                                         <div className="mx-2 w-full">
-                                            <p>{ele.id}</p>
-                                            <p className="my-2 w-full flex justify-between items-center">{`${(ele.area / 1000000).toFixed(2)} km²`}<GiPathDistance className="text-lg" /></p>
+                                            {/* <p>{ele.id}</p> */}
+                                            <p className="my-2 w-full flex justify-between items-center">{`${ele.area} km²`}<GiPathDistance className="text-lg" /></p>
                                             <p className="my-2 w-full flex justify-between items-center">{"Ticket Location "} <FaMapMarked className="text-lg" /></p>
                                             <p className="my-2 w-full flex justify-between items-center">{ele.resolution} <MdHd className="text-lg" /></p>
                                             <p className="my-2 w-full flex justify-between items-center">{ele.imagery_type} <WiDayCloudy className="text-lg" /></p>

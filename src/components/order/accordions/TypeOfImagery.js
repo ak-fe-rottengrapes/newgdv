@@ -39,6 +39,27 @@ const imageryTypes = [
     value: 'Night-time',
     imagePath: '/assets/nighttime.png',
     description: 'Infrared imagery captured during nighttime hours'
+  },
+  {
+    id: 'stereo',
+    label: 'Stereo',
+    value: 'Stereo',
+    imagePath: '/assets/nighttime.png',
+    description: '3D imagery for depth perception and terrain analysis'
+  },
+  {
+    id: 'mono',
+    label: 'Mono',
+    value: 'Mono',
+    imagePath: '/assets/nighttime.png',
+    description: 'Single band imagery for basic visual analysis'
+  },
+  {
+    id: 'dem',
+    label: 'DEM',
+    value: 'DEM',
+    imagePath: '/assets/nighttime.png',
+    description: 'Digital Elevation Model for terrain analysis'
   }
 ];
 

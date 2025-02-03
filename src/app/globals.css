@@ -101,3 +101,29 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+.ol-tooltip {
+  position: relative;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  color: white;
+  padding: 4px 8px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.ol-tooltip-measure {
+  opacity: 1;
+  font-weight: bold;
+}
+
+.ol-tooltip-static {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 1px solid white;
+}
+
+.ol-tooltip.hidden {
+  display: none;
+}

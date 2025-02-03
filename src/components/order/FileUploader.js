@@ -149,13 +149,9 @@ const FileUploader = () => {
                     // Set the polygon data in the specified format
                     const geoData = {
                         type: "FeatureCollection",
-                        features: features.map(feature => ({
-                            type: "Feature",
-                            geometry: feature.getGeometry().clone().transform('EPSG:3857', 'EPSG:4326').getCoordinates(),
-                            properties: {
-                                name: "polygon",
-                                description: "Drawn polygon"
-                            }
+                        features: features.map(feature => new GeoJSON().writeFeatureObject(feature, {
+                            featureProjection: 'EPSG:3857',
+                            dataProjection: 'EPSG:4326'
                         }))
                     };
                     setOperaorGeoData(geoData);

@@ -19,6 +19,7 @@ export function ToolProvider({ children }) {
   const [operators, setOperators] = useState([]);
   const [order_type, setOrderType] = useState('');
   const [satellite_data, setSatelliteData] = useState(null);
+  const [selectedSatellitesDetails, setSelectedSatellitesDetails] = useState(null);
 
   return (
     <ToolContext.Provider 
@@ -52,7 +53,9 @@ export function ToolProvider({ children }) {
         satellite_data,
         setSatelliteData,
         operatorGeoData, 
-        setOperaorGeoData
+        setOperaorGeoData,
+        selectedSatellitesDetails, 
+        setSelectedSatellitesDetails
       }}
     >
       {children}

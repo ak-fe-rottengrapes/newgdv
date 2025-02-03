@@ -10,58 +10,7 @@ import { getNotification } from "../services/notification/api";
 import { useSession } from "next-auth/react";
 import { BadgeCheck, BookX, Clock } from "lucide-react";
 
-const dummyNotifications = [
-    {
-        id: 1,
-        title: "Order Canccelled",
-        order: "Order #12345",
-        area: 5000000,
-        operators: "Operator A",
-        resolution: "High",
-        imagery_type: "Satellite",
-        order_status: "cancelled",
-    },
-    {
-        id: 4,
-        title: "Order Pending",
-        order: "Order #12345",
-        area: 5000000,
-        operators: "Operator A",
-        resolution: "High",
-        imagery_type: "Satellite",
-        order_status: "pending",
-    },
-    {
-        id: 5,
-        title: "Order Approved",
-        order: "Order #12345",
-        area: 5000000,
-        operators: "Operator A",
-        resolution: "High",
-        imagery_type: "Satellite",
-        order_status: "approved",
-    },
-    {
-        id: 2,
-        title: "Order Pending",
-        order: "Order #12346",
-        area: 3000000,
-        operators: "Operator B",
-        resolution: "Medium",
-        imagery_type: "Drone",
-        order_status: "pending",
-    },
-    {
-        id: 3,
-        title: "Order Cancelled",
-        order: "Order #12347",
-        area: 1000000,
-        operators: "Operator C",
-        resolution: "Low",
-        imagery_type: "Aerial",
-        order_status: "cancelled",
-    },
-];
+
 
 const Notifications = () => {
     const { data: session } = useSession();
@@ -74,7 +23,7 @@ const Notifications = () => {
             try {
                 setLoading(true);
                 const response = await getNotification(session?.user?.access);
-                // setNotificationList(response);
+                setNotificationList(response);
             } catch (error) {
                 console.error(error);
             } finally {
@@ -84,13 +33,7 @@ const Notifications = () => {
         fetchNotifications();
     },[session?.user?.access])
 
-    useEffect(() => {
-        setLoading(true);
-        setTimeout(() => {
-            setNotificationList(dummyNotifications);
-            setLoading(false);
-        }, 1000);
-    }, [reload]);
+  
 
     const fetchNotifications = () => {
         setReload(true);
@@ -187,7 +130,7 @@ const Notifications = () => {
                                         style={{ color: "white" }}
                                     >
                                         <div className="mx-2">
-                                            <p>{ele.order}</p>
+                                            {/* <p>{ele.order}</p> */}
                                             <p className="my-2">
                                                 {`${(ele.area / 1000000).toFixed(2)} km²`}
                                             </p>

@@ -12,7 +12,8 @@ import {
   User,
   PanelRightOpen,
   PanelRightClose,
-  Menu
+  Menu,
+  // MapPlus 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -51,11 +52,6 @@ export function Sidebar() {
   const routes = [
     {
       icon: Home,
-      label: 'Dashboard',
-      href: '/user',
-    },
-    {
-      icon: ShoppingCart,
       label: 'Place Order',
       href: '/user/order',
     },
@@ -74,6 +70,11 @@ export function Sidebar() {
       label: 'Search Products',
       href: '/user/searchproduct',
     },
+    {
+      icon: ShoppingCart,
+      label: 'Cart',
+      href: '/user/AddToCart',
+    }
   ];
 
   const handleResetPassword = async () => {
