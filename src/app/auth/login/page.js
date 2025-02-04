@@ -122,7 +122,7 @@ const Login = () => {
       } else if (session?.user?.is_employee) {
         router.push("/employee");
       } else {
-        router.push("/user");
+        router.push("/user/order");
       }
     }
 

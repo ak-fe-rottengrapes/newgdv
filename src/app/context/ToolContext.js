@@ -6,7 +6,7 @@ const ToolContext = createContext();
 export function ToolProvider({ children }) {
   const [activeTool, setActiveTool] = useState(null);
   const [imagery_type, setImageryType] = useState('');
-  const [resolution, setResolution] = useState(null);
+  const [resolution, setResolution] = useState(30);
   const [area, setArea] = useState(null);
   const [cloud_cover_percentage, setCloudCoverPercentage] = useState(10);
   const [date_from, setDateFrom] = useState('');
@@ -18,7 +18,10 @@ export function ToolProvider({ children }) {
   const [ona_percentage, setOnaPercentage] = useState(10);
   const [operators, setOperators] = useState([]);
   const [order_type, setOrderType] = useState('');
-  const [satellite_data, setSatelliteData] = useState(null);
+  const [satellite_data, setSatelliteData] = useState({
+    JILIN: [],
+    MAXAR: [],
+  });
   const [selectedSatellitesDetails, setSelectedSatellitesDetails] = useState(null);
 
   return (
