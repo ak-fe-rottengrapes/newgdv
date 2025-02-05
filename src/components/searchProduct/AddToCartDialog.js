@@ -553,11 +553,66 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
             };
         });
     };
+    const setSatelliteDetailsByName = () => {
+        if (!clickedCard?.satelliteName) return;
+    
+        const newItem = {
+            id: Number(clickedCard.id),
+            satelliteId: clickedCard.satelliteId,
+            productId: clickedCard.productId,
+            imageGeo: drawPolygon,
+            area: Number(drawArea.toFixed(2)),
+            price: Number(drawPolygonPrice.toFixed(2)),
+            satelliteName: clickedCard.satelliteName,
+            jpg: clickedCard.jpg,
+            imagingTime: clickedCard.imagingTime,
+            cloudPercent: clickedCard.cloudPercent,
+            price_per_sqkm: clickedCard.price_per_sqkm,
+            min_order_size: clickedCard.min_order_size,
+        };
+    
+        setSelectedSatellitesDetails(prevData => {
+            // Check if ID already exists in array
+            const exists = prevData[clickedCard.satelliteName]?.some(
+                item => item.id === newItem.id
+            );
+    
+            // Return existing data if duplicate found
+            if (exists) {
+                toast({
+                    title: 'Error',
+                    description: 'This item is already in the cart.',
+                    variant: 'destructive',
+                    duration: 1000
+                })
+                return prevData;
+            }
+    
+            // Add new item if no duplicate
+            const updatedData = {
+                ...prevData,
+                [clickedCard.satelliteName]: [
+                    ...(prevData[clickedCard.satelliteName] || []),
+                    newItem
+                ]
+            };
+    
+            // Update selectedSatellitesDetails state
+            setSelectedSatellitesDetails(updatedData);
+    
+            return updatedData;
+        });
+    };
     
     const handleAddToCart = () => {
         if (!clickedCard) return;
         setSatelliteDataByName();
+        setSatelliteDetailsByName();
         setAddToCart(false)
+        setDrawPolygon(null);
+        setDrawOrFull('');
+        setDrawPolygonPrice(0);
+        setDrawArea(0);
     };
     
 

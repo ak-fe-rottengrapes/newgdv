@@ -150,6 +150,7 @@ const AddToCart = () => {
                       {/* Price & Min Order Size */}
                       <div className="flex flex-col items-center gap-1">
                         <span className="text-md font-bold">${satellite.price_per_sqkm}/km<sup>2</sup></span>
+                        <span className="text-md font-bold">Price: ${satellite.price}</span>
                         <button className="mt-2 bg-[#202A33] border border-gray-600 rounded-2xl p-1 text-white text-xs transition-all duration-300 ease-in-out hover:bg-gray-700 hover:border-gray-400" onClick={() => handleRemove(satellite)}>
                           Remove
                         </button>

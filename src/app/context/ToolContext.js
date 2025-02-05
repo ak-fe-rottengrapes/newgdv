@@ -22,7 +22,10 @@ export function ToolProvider({ children }) {
     JILIN: [],
     MAXAR: [],
   });
-  const [selectedSatellitesDetails, setSelectedSatellitesDetails] = useState(null);
+  const [selectedSatellitesDetails, setSelectedSatellitesDetails] = useState({
+    JILIN: [],
+    MAXAR: [],
+  });
 
   return (
     <ToolContext.Provider 
