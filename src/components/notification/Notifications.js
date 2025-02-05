@@ -59,31 +59,31 @@ const Notifications = () => {
                   <div key={index} className="border shadow-lg rounded my-2 p-2 w-full animate-pulse">
                     <div className="flex">
                       {/* Icon Skeleton */}
-                      <div className="h-8 w-8 rounded-full bg-gray-200" />
+                      <div className="h-8 w-8 rounded-full bg-gray-700" />
                       
                       <div className="ml-1 w-full">
                         {/* Title Skeleton */}
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 mx-2" />
+                        <div className="h-4 bg-gray-700 rounded w-3/4 mb-2 mx-2" />
                         
                         <div className="flex text-xs font-normal">
                           {/* Left Column */}
                           <div className="mx-2 w-1/2">
-                            <div className="h-3 bg-gray-200 rounded w-3/4 my-2" />
-                            <div className="h-3 bg-gray-200 rounded w-full my-2" />
-                            <div className="h-3 bg-gray-200 rounded w-2/3 my-2" />
+                            <div className="h-3 bg-gray-700 rounded w-3/4 my-2" />
+                            <div className="h-3 bg-gray-700 rounded w-full my-2" />
+                            <div className="h-3 bg-gray-700 rounded w-2/3 my-2" />
                           </div>
                           
                           {/* Right Column */}
                           <div className="mx-2 ml-12 w-1/2">
-                            <div className="h-3 bg-gray-200 rounded w-full my-2" />
-                            <div className="h-3 bg-gray-200 rounded w-3/4 my-2" />
+                            <div className="h-3 bg-gray-700 rounded w-full my-2" />
+                            <div className="h-3 bg-gray-700 rounded w-3/4 my-2" />
                           </div>
                         </div>
                       </div>
                     </div>
                     
                     {/* Status Message Skeleton */}
-                    <div className="h-3 bg-gray-200 rounded w-2/3 mx-auto my-2" />
+                    <div className="h-3 bg-gray-700 rounded w-2/3 mx-auto my-2" />
                   </div>
                 ))}
               </div>
@@ -132,7 +132,7 @@ const Notifications = () => {
                                         <div className="mx-2">
                                             {/* <p>{ele.order}</p> */}
                                             <p className="my-2">
-                                                {`${(ele.area / 1000000).toFixed(2)} km²`}
+                                                {`${ele.area} km²`}
                                             </p>
                                             <p>{`Operator: ${ele.operators}`}</p>
                                         </div>

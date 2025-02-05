@@ -33,3 +33,19 @@ export const getOperatorData = async (
         throw new Error(error.response ? error.response.data : "Failed to fetch Jilin data");
     }
 }
+
+export const createOrder = async (token, formData) => {
+    try {
+        console.log(formData)
+        const response = await axios.post(`${api_url}/orders/`, formData, {
+            headers: {
+                // "Content-Type": "multipart/form-data",
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            }
+        });
+        return response.data
+    } catch (error) {
+        throw new Error(error.response ? error.response.data : "Failed to fetch create order");
+    }
+}

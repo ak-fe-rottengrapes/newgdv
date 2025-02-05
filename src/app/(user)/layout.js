@@ -7,7 +7,9 @@ export default function RootLayout({ children }) {
   return (
     <SessionProvider>
       <ToolProvider>
-        <UserLayout>{children}</UserLayout>
+        <UserLayout>
+          {children}
+        </UserLayout>
       </ToolProvider>
     </SessionProvider>
   )

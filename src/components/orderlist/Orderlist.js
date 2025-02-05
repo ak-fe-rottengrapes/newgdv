@@ -20,40 +20,6 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast";
-import { Skeleton } from "../ui/skeleton";
-
-const dummyOrders = [
-    {
-        id: 1,
-        name: "Order 1",
-        area: 5000000,
-        operators: "Operator A",
-        resolution: "High",
-        imagery_type: "Satellite",
-        order_status: "approved",
-        created_at: "2023-10-01T10:00:00Z",
-    },
-    {
-        id: 2,
-        name: "Order 2",
-        area: 3000000,
-        operators: "Operator B",
-        resolution: "Medium",
-        imagery_type: "Drone",
-        order_status: "pending",
-        created_at: "2023-10-02T11:00:00Z",
-    },
-    {
-        id: 3,
-        name: "Order 3",
-        area: 1000000,
-        operators: "Operator C",
-        resolution: "Low",
-        imagery_type: "Aerial",
-        order_status: "cancelled",
-        created_at: "2023-10-03T12:00:00Z",
-    },
-];
 
 const Orderlist = () => {
     const {toast} = useToast();
@@ -153,25 +119,25 @@ const Orderlist = () => {
                     <div key={index} className="border shadow-lg rounded my-2 p-2 w-full relative animate-pulse">
                       <div className="flex">
                         {/* Icon Skeleton */}
-                        <div className="h-8 w-8 rounded-full bg-gray-200" />
+                        <div className="h-8 w-8 rounded-full bg-gray-700" />
                         
                         <div className="ml-1 mt-3 w-full">
                           {/* Title Skeleton */}
-                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                          <div className="h-4 bg-gray-700 rounded w-3/4 mb-2" />
                           
                           <div className="text-xs font-normal w-44">
                             {/* Multiple Info Rows */}
                             {[...Array(5)].map((_, i) => (
                               <div key={i} className="mx-2 my-2 w-full flex justify-between">
-                                <div className="h-3 bg-gray-200 rounded w-1/2" />
-                                <div className="h-4 w-4 bg-gray-200 rounded-full" />
+                                <div className="h-3 bg-gray-700 rounded w-1/2" />
+                                <div className="h-4 w-4 bg-gray-700 rounded-full" />
                               </div>
                             ))}
                             
                             {/* Status Row */}
                             <div className="mx-2 my-2 w-full flex justify-between">
-                              <div className="h-3 bg-gray-200 rounded w-1/3" />
-                              <div className="h-4 w-4 bg-gray-200 rounded-full" />
+                              <div className="h-3 bg-gray-700 rounded w-1/3" />
+                              <div className="h-4 w-4 bg-gray-700 rounded-full" />
                             </div>
                           </div>
                         </div>
@@ -179,13 +145,13 @@ const Orderlist = () => {
               
                       {/* Date Skeleton */}
                       <div className="absolute right-0 top-0 p-1 m-1">
-                        <div className="h-3 bg-gray-200 rounded w-24" />
+                        <div className="h-3 bg-gray-700 rounded w-24" />
                       </div>
               
                       {/* Action Buttons Skeleton */}
                       <div className="absolute right-2 top-12 space-y-3">
-                        <div className="h-7 w-7 bg-gray-200 rounded-full" />
-                        <div className="h-7 w-7 bg-gray-200 rounded-full" />
+                        <div className="h-7 w-7 bg-gray-700 rounded-full" />
+                        <div className="h-7 w-7 bg-gray-700 rounded-full" />
                       </div>
                     </div>
                   ))}
@@ -224,7 +190,7 @@ const Orderlist = () => {
                     {orderList.map((ele) => (
                         <div key={ele.id} className={`border shadow-lg rounded my-2 p-2 w-full relative ${ele.order_status === "approved" ? "border-green-500" : ele.order_status === "pending" ? "border-yellow-500" : "border-red-500"}`}>
                             <div className="flex">
-                                <div>
+                                <div className="mt-4">
                                     {ele.order_status === "approved" ? (
                                         <BadgeCheck className="text-green-500" size={32} />
                                     ) : ele.order_status === "pending" ? (
@@ -239,8 +205,9 @@ const Orderlist = () => {
                                         <div className="mx-2 w-full">
                                             {/* <p>{ele.id}</p> */}
                                             <p className="my-2 w-full flex justify-between items-center">{`${ele.area} km²`}<GiPathDistance className="text-lg" /></p>
-                                            <p className="my-2 w-full flex justify-between items-center">{"Ticket Location "} <FaMapMarked className="text-lg" /></p>
-                                            <p className="my-2 w-full flex justify-between items-center">{ele.resolution} <MdHd className="text-lg" /></p>
+                                            {/* <p className="my-2 w-full flex justify-between items-center">{"Ticket Location "} <FaMapMarked className="text-lg" /></p> */}
+                                            <p className="my-2 w-full flex justify-between items-center">Resolution: {ele.resolution} <MdHd className="text-lg" /></p>
+                                            <p className="my-2 w-full flex justify-between items-center">Operators: {ele.operators.join(',')} <MdHd className="text-lg" /></p>
                                             <p className="my-2 w-full flex justify-between items-center">{ele.imagery_type} <WiDayCloudy className="text-lg" /></p>
                                             <p className="my-2 w-full flex justify-between items-center">{ele.order_status}
                                                 {ele.order_status === "approved" ? (

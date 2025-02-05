@@ -70,7 +70,8 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
         operatorGeoData,
         selectedSatellitesDetails,
         setSelectedSatellitesDetails,
-        setOperaorGeoData } = useTool();
+        setOperaorGeoData,
+        addToCartId, setAddToCartId } = useTool();
     const mapRef = useRef(null)
     const mapInstance = useRef(null)
 
@@ -86,8 +87,8 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
     const sketchRef = useRef(null);
     const overlaysRef = useRef([]);
 
-    const [drawPolygonPrice, setDrawPolygonPrice] = useState(0);
-    const [drawArea, setDrawArea] = useState(0);
+    const [drawPolygonPrice, setDrawPolygonPrice] = useState(Number(clickedCard?.total_price));
+    const [drawArea, setDrawArea] = useState(Number(clickedCard?.area_sq_km));
 
     const createMeasureTooltip = () => {
         if (measureTooltipElementRef.current) {
@@ -105,6 +106,8 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
         mapInstance.current.addOverlay(measureTooltipRef.current);
         overlaysRef.current.push(measureTooltipRef.current);
     };
+
+    
 
     const createHelpTooltip = () => {
         if (helpTooltipElementRef.current) {
@@ -158,6 +161,9 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
 
     useEffect(() => {
         setTimeout(() => {
+            
+        setDrawPolygonPrice(Number(clickedCard?.total_price));
+        setDrawArea(Number(clickedCard?.area_sq_km));
             console.log('mapRef.current', mapRef.current)
             if (mapRef.current && !mapInstance.current) {
                 mapInstance.current = new Map({
@@ -510,13 +516,14 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
         setModifyInteraction(null);
         setSnapInteraction(null);
         setVectorLayer(null);
+        setDrawPolygonPrice(Number(clickedCard?.total_price));
     }
 
     console.log("draw ", drawPolygon)
 
     const setSatelliteDataByName = () => {
         if (!clickedCard?.satelliteName) return;
-        
+
         const newItem = {
             id: Number(clickedCard.id),
             satelliteId: clickedCard.satelliteId,
@@ -528,20 +535,20 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
     
         setSatelliteData(prevData => {
             // Check if ID already exists in array
-            const exists = prevData[clickedCard.satelliteName]?.some(
-                item => item.id === newItem.id
-            );
+            // const exists = prevData[clickedCard.satelliteName]?.some(
+            //     item => item.id === newItem.id
+            // );
     
-            // Return existing data if duplicate found
-            if (exists) {
-                toast({
-                    title: 'Error',
-                    description: 'This item is already in the cart.',
-                    variant: 'destructive',
-                    duration: 1000
-                })
-                return prevData;
-            }
+            // // Return existing data if duplicate found
+            // if (exists) {
+            //     toast({
+            //         title: 'Error',
+            //         description: 'This item is already in the cart.',
+            //         variant: 'destructive',
+            //         duration: 1000
+            //     })
+            //     return prevData;
+            // }
     
             // Add new item if no duplicate
             return {
@@ -555,7 +562,8 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
     };
     const setSatelliteDetailsByName = () => {
         if (!clickedCard?.satelliteName) return;
-    
+        setAddToCartId((prevIds) => [...prevIds, clickedCard.id]);
+
         const newItem = {
             id: Number(clickedCard.id),
             satelliteId: clickedCard.satelliteId,
@@ -569,54 +577,62 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
             cloudPercent: clickedCard.cloudPercent,
             price_per_sqkm: clickedCard.price_per_sqkm,
             min_order_size: clickedCard.min_order_size,
+            area_sq_km: clickedCard.area_sq_km,
         };
     
         setSelectedSatellitesDetails(prevData => {
             // Check if ID already exists in array
-            const exists = prevData[clickedCard.satelliteName]?.some(
-                item => item.id === newItem.id
-            );
+            // const exists = prevData[clickedCard.satelliteName]?.some(
+            //     item => item.id === newItem.id
+            // );
     
-            // Return existing data if duplicate found
-            if (exists) {
-                toast({
-                    title: 'Error',
-                    description: 'This item is already in the cart.',
-                    variant: 'destructive',
-                    duration: 1000
-                })
-                return prevData;
-            }
+            // // Return existing data if duplicate found
+            // if (exists) {
+            //     toast({
+            //         title: 'Error',
+            //         description: 'This item is already in the cart.',
+            //         variant: 'destructive',
+            //         duration: 1000
+            //     })
+            //     return prevData;
+            // }
     
             // Add new item if no duplicate
-            const updatedData = {
+            return {
                 ...prevData,
                 [clickedCard.satelliteName]: [
                     ...(prevData[clickedCard.satelliteName] || []),
                     newItem
                 ]
             };
-    
-            // Update selectedSatellitesDetails state
-            setSelectedSatellitesDetails(updatedData);
-    
-            return updatedData;
         });
+        
     };
     
     const handleAddToCart = () => {
-        if (!clickedCard) return;
         setSatelliteDataByName();
         setSatelliteDetailsByName();
+        if (!clickedCard) return;
         setAddToCart(false)
         setDrawPolygon(null);
         setDrawOrFull('');
+        if (vectorLayer) {
+            vectorLayer.getSource().clear();
+        }
+        if (mapInstance.current) {
+            mapInstance.current.getOverlays().clear();
+        }
+        setDrawInteraction(null);
+        setModifyInteraction(null);
+        setSnapInteraction(null);
+        setVectorLayer(null);
         setDrawPolygonPrice(0);
         setDrawArea(0);
     };
     
 
     console.log("Satellite Data", satellite_data)
+    console.log("Selected Satellite Details", selectedSatellitesDetails)
 
     return (
         <div>

@@ -19,8 +19,10 @@ import { fromLonLat } from 'ol/proj';
 import { useTool } from '@/app/context/ToolContext';
 import { useRouter } from 'next/navigation';
 import { Vector as VectorLayer } from 'ol/layer';
+import { useToast } from "@/hooks/use-toast";
 
 const OrderForm = () => {
+    const { toast } = useToast();
     const router = useRouter();
     const { activeTool,
         setActiveTool,
@@ -125,7 +127,12 @@ const OrderForm = () => {
         ) {
             router.push("/user/searchproduct")
         } else {
-            console.log('Fill all fields');
+            toast({
+                title: "Error",
+                description: "Please fill all the required fields",
+                variant: "destructive",
+                duration: 2000,
+            });
         }
     };
     
@@ -208,8 +215,8 @@ const OrderForm = () => {
                 <div className="space-y-2 overflow-y-auto h-[calc(100vh-350px)] flex flex-col gap-2">
                     <DateAccordion />
                     <TypeOfImagery />
-                    <ResolutionAccordion />
                     <SelectOperatorAccordion />
+                    <ResolutionAccordion />
                     <CloudCoverAccordion />
                     <ONA />
                     <AdditionalAccordion />

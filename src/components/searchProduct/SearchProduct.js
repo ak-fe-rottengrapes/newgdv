@@ -30,9 +30,12 @@ import {
 import { Button } from '../ui/button';
 import { useRouter } from 'next/navigation';
 import AddToCartDialog from './AddToCartDialog';
+import { useToast } from '@/hooks/use-toast';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
 export default function SearchProduct() {
     const { data: session } = useSession();
+    const { toast } = useToast();
     const router = useRouter();
     const { activeTool,
         setActiveTool,
@@ -65,7 +68,8 @@ export default function SearchProduct() {
         operatorGeoData,
         selectedSatellitesDetails,
         setSelectedSatellitesDetails,
-        setOperaorGeoData } = useTool();
+        setOperaorGeoData,
+        addToCartId, setAddToCartId } = useTool();
     const { map, hoverGeoJonData, setHoverGeoJsonData, addToCartMap,
         setAddToCartMap } = useContext(MapContext);
     const [selectedSatellites, setSelectedSatellites] = useState([]);
@@ -79,6 +83,9 @@ export default function SearchProduct() {
     const [showFull, setShowFull] = useState(false);
     const [imgLoad, setImgLoad] = useState(false);
     const [addToCart, setAddToCart] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const ITEMS_PER_PAGE = 10;
 
     const toggleShowFull = () => {
         setShowFull(prev => !prev);
@@ -88,126 +95,71 @@ export default function SearchProduct() {
     const mapRef = useRef(null)
     const mapInstance = useRef(null)
 
-    useEffect(() => {
-        setTimeout(() => {
-            console.log('mapRef.current', mapRef.current)
-            if (mapRef.current && !mapInstance.current) {
-                mapInstance.current = new Map({
-                    target: mapRef.current,
-                    layers: [
-                        new TileLayer({
-                            source: new OSM(),
-                        }),
-                    ],
-                    view: new View({
-                        center: [8742511, 2409708],
-                        zoom: 5      // Default zoom level
-                    }),
-                })
 
-                // Create GeoJSON object
-                const geoJsonObject = {
-                    type: "FeatureCollection",
-                    features: [
-                        {
-                            type: "Feature",
-                            geometry: clickedCard?.imageGeo
-                        }
-                    ]
-                };
 
-                const userPolygon = {
-                    type: 'FeatureCollection',
-                    features: [
-                        {
-                            type: 'Feature',
-                            geometry: location
-                        }
-                    ]
-                }
-                console.log("userPolygon", userPolygon);
-                console.log(location)
-                // Create vector source and layer for polygon
-                const vectorSource = new VectorSource({
-                    features: new GeoJSON().readFeatures(geoJsonObject, {
-                        featureProjection: 'EPSG:3857',
-                        dataProjection: 'EPSG:4326'
-                    })
-                });
+    const formatOperators = () => {
+        if (!operators || operators.length === 0) return '';
+        return operators.join(',');
+    };
 
-                const userVectorSource = new VectorSource({
-                    features: new GeoJSON().readFeatures(userPolygon, {
-                        featureProjection: 'EPSG:3857',
-                        dataProjection: 'EPSG:4326'
-                    })
-                });
 
-                const userVectorLayer = new VectorLayer({
-                    source: userVectorSource,
-                    style: {
-                        'fill-color': 'rgba(51, 152, 167, 0.2)',
-                        'stroke-color': '#192028',
-                        'stroke-width': 2
-                    },
-                });
-
-                const vectorLayer = new VectorLayer({
-                    source: vectorSource,
-                    style: {
-                        'fill-color': 'rgba(51, 152, 167, 0.2)',
-                        'stroke-color': '#ffcc33',
-                        'stroke-width': 2
-                    },
-                });
-                const extent = userVectorSource.getExtent();
-                if (mapInstance.current) {
-                    mapInstance.current.addLayer(vectorLayer);
-                    mapInstance.current.addLayer(userVectorLayer);
-                    mapInstance.current.getView().fit(extent, {
-                        padding: [50, 50, 50, 50],
-                        duration: 500,
-                        maxZoom: 14  // Prevent over-zooming
-                    });
-                }
-            }
-        }, 150);
-
-        // Clean up the map instance on component unmount
-        return () => {
-            if (mapInstance.current) {
-                mapInstance.current.setTarget(null)
-                mapInstance.current = null
-            }
-        }
-    }, [addToCart])
-
-    useEffect(() => {
-        const fetchOperatorData = async () => {
+    const fetchOperatorData = async (pageNum = 1) => {
+        try {
             if (operators && date_from && date_to && operatorGeoData) {
-                console.log(cloud_cover_percentage, date_from, date_to, operatorGeoData);
-                try {
-                    setIsLoading(true);
-                    const response = await getOperatorData(
-                        "JILIN,MAXAR",
-                        1,
-                        10,
-                        JSON.stringify(operatorGeoData),
-                        cloud_cover_percentage,
-                        date_from,
-                        date_to,
-                        session?.user?.access
-                    );
-                    const combinedProducts = [...response.Jilin, ...response.Maxar]; // Combine both arrays
-                    setProductList(combinedProducts); // Update to handle the new data structure
-                } catch (error) {
-                    console.error(error);
-                } finally {
-                    setIsLoading(false);
-                }
-            }
-        }
+                setIsLoading(true);
+                console.log('Fetching page:', pageNum); // Debug log
+                const response = await getOperatorData(
+                    formatOperators(),
+                    pageNum,
+                    ITEMS_PER_PAGE,
+                    JSON.stringify(operatorGeoData),
+                    cloud_cover_percentage,
+                    date_from,
+                    date_to,
+                    session?.user?.access
+                );
+                
+                const combinedProducts = [
+                    ...(response.Jilin || []),
+                    ...(response.Maxar || [])
+                ].filter(Boolean);
 
-        fetchOperatorData();
+                console.log('Received products:', combinedProducts.length); // Debug log
+
+                if (pageNum === 1) {
+                    setProductList(combinedProducts);
+                } else {
+                    setProductList(prev => [...prev, ...combinedProducts]);
+                }
+                
+                // Only set hasMore to false if we received fewer items than requested
+                setHasMore(combinedProducts.length >= ITEMS_PER_PAGE);
+            } else {
+                router.push('/user/order');
+                toast({
+                    title: "Error",
+                    description: "Please select an operator, date range, and area to search for products",
+                    // variant: "destructive",
+                    className: 'bg-yellow-200 text-black',
+                    duration: 2000,
+                })
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error); // Debug log
+            toast({
+                title: "Error",
+                description: "Failed to fetch operator data",
+                variant: "destructive",
+                duration: 2000,
+            })
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        setPage(1);
+        fetchOperatorData(1);
     }, [operators, date_from, date_to, operatorGeoData, cloud_cover_percentage, session?.user?.access]);
 
     const handleMouseEnter = (coordinates, imageUrl) => {
@@ -334,17 +286,16 @@ export default function SearchProduct() {
     console.log("selectedSatellites", selectedSatellitesDetails);
     const OnSubmitHandler = () => {
         // setOpen(true);
-        const generateUniqueOrderId = (userId) => {
-            const unixTimestamp = Math.floor(Date.now() / 1000);
-            const uniqueOrderId = `${userId}-${unixTimestamp}`;
-            return uniqueOrderId;
+        // const generateUniqueOrderId = (userId) => {
+        //     const unixTimestamp = Math.floor(Date.now() / 1000);
+        //     const uniqueOrderId = `${userId}-${unixTimestamp}`;
+        //     return uniqueOrderId;
 
-        };
-        const orderIdName = generateUniqueOrderId(session?.user?.user_id);
-        setName(orderIdName);
-        setSatelliteData({ selectedSatellites });
+        // };
+        // const orderIdName = generateUniqueOrderId(session?.user?.user_id);
+        // setName(orderIdName);
+        // setSatelliteData({ selectedSatellites });
         router.push('/user/AddToCart');
-        console.log("Submit request");
     };
 
     console.log("selectedSatellites", selectedSatellites);
@@ -414,7 +365,17 @@ export default function SearchProduct() {
         setAddToCart(true);
         setClickedCard(obj);
     }
+    const isProductInCart = (product) => {
+        // return selectedSatellitesDetails[product.satelliteName]?.includes(item => item.id === product.id);
+        return addToCartId.includes(product.id);
     
+    };
+    
+    const fetchMoreData = () => {
+        const nextPage = page + 1;
+        setPage(nextPage);
+        fetchOperatorData(nextPage);
+    };
 
     return (
         <div className="h-full flex flex-col justify-between gap-2 rounded-lg backdrop-blur-sm font-inter" >
@@ -435,254 +396,189 @@ export default function SearchProduct() {
                 />
             </div>
 
-            {isLoading ? (
+            {isLoading && page === 1 ? (
                 <div className='border rounded-md flex justify-center items-center h-full'>
                     {/* Skeleton Loading Placeholder */}
-                    <div className='h-[calc(100vh-180px)] w-full border rounded-lg overflow-y-auto'>
+                    <div className='h-[calc(100vh-180px)] w-full  rounded-lg overflow-y-auto'>
                         {[...Array(5)].map((_, index) => ( // Render 5 skeleton placeholders
                             <div key={index} className='bg-[#202A33] border mx-1 my-2 rounded p-3 flex gap-3 animate-pulse'>
                                 {/* Image Placeholder */}
-                                <div className='w-[100px] h-[100px] bg-gray-700 rounded-md'></div>
+                                <div className='w-16 h-20 bg-gray-700 rounded-md'></div>
                                 {/* Text Placeholder */}
                                 <div className='flex flex-col gap-2 flex-1'>
                                     <div className='h-4 bg-gray-700 rounded w-3/4'></div>
                                     <div className='h-3 bg-gray-700 rounded w-1/2'></div>
                                     <div className='h-3 bg-gray-700 rounded w-2/3'></div>
+                                    <div className='h-3 bg-gray-700 rounded w-2/3'></div>
+                                    <div className='h-3 bg-gray-700 rounded w-2/3'></div>
                                 </div>
                                 {/* Checkbox Placeholder */}
-                                <div className='w-5 h-5 bg-gray-700 rounded ml-2'></div>
+                                <div className='flex flex-col items-center gap-2'>
+                                    <div className='w-10 h-5 bg-gray-700 rounded ml-2'></div>
+                                    <div className='w-10 h-5 bg-gray-700 rounded ml-2'></div>
+                                    <div className='w-12 h-5 bg-gray-700 rounded-2xl ml-2'></div>
+                                </div>
                             </div>
                         ))}
                     </div>
                 </div>
             ) : (
-                <div className='h-[calc(100vh-180px)]  border rounded-lg overflow-y-auto'>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogContent className="bg-[#202A33] border border-gray-600 rounded-lg overflow-x-auto p-6 text-white w-[400px] sm:w-[500px] md:w-[600px]">
-                            <DialogHeader>
-                                <DialogTitle className="text-xl font-bold mb-4 text-center text-gray-200">
-                                    Order Details
-                                </DialogTitle>
-                            </DialogHeader>
-
-                            <div className="space-y-1 border rounded-md p-2 shadow-md border-gray-700">
-                                {[
-                                    { label: "Satellite Name", value: clickedCard?.satelliteName },
-                                    {
-                                        label: "Date",
-                                        value: clickedCard?.imagingTime
-                                            ? new Intl.DateTimeFormat("en-US", {
-                                                year: "numeric",
-                                                month: "short",
-                                                day: "2-digit",
-                                            }).format(new Date(clickedCard.imagingTime.replace(" ", "T")))
-                                            : "",
-                                    },
-                                    { label: "Cloud Cover", value: `${clickedCard?.cloudPercent}%` },
-                                    {
-                                        label: "Price per Km²",
-                                        value: `$${clickedCard?.price_per_sqkm}/km²`,
-                                    },
-                                    {
-                                        label: "Minimum Order Size",
-                                        value: `${clickedCard?.min_order_size} km²`,
-                                    },
-                                    { label: "Satellite ID", value: clickedCard?.satelliteId },
-                                ].map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex justify-between border-gray-700 "
-                                    >
-                                        <span className="font-semibold text-sm text-gray-300">{item.label}:</span>
-                                        <span className="text-gray-400 text-sm">{item.value}</span>
-                                    </div>
-                                ))}
-
+                <div 
+                    className='h-[calc(100vh-180px)] border rounded-lg overflow-y-auto' 
+                    id="scrollableDiv"
+                    style={{ overflow: 'auto' }} // Ensure scrolling is enabled
+                >
+                    <InfiniteScroll
+                        dataLength={productList.length} // Use productList instead of filterProduct
+                        next={fetchMoreData}
+                        hasMore={hasMore}
+                        loader={
+                            <div className="text-center p-4">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
                             </div>
+                        }
+                        scrollableTarget="scrollableDiv"
+                        endMessage={
+                            <p className="text-center text-gray-500 py-4">
+                                No more products to load.
+                            </p>
+                        }
+                    >
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogContent className="bg-[#202A33] border border-gray-600 rounded-lg overflow-x-auto p-6 text-white w-[400px] sm:w-[500px] md:w-[600px]">
+                                <DialogHeader>
+                                    <DialogTitle className="text-xl font-bold mb-4 text-center text-gray-200">
+                                        Order Details
+                                    </DialogTitle>
+                                </DialogHeader>
 
-                            {/* Image Section */}
-                            <div className="mt-4 flex justify-center">
-                                {clickedCard?.jpg ? (
-                                    <div className="relative w-full max-w-[300px] h-[200px] flex items-center justify-center">
-                                        {isLoading && (
-                                            <div className="absolute text-gray-400">Loading...</div>
-                                        )}
-                                        <Image
-                                            src={clickedCard.jpg}
-                                            width={200}
-                                            height={200}
-                                            alt="Satellite Image"
-                                            className="rounded-lg object-cover w-full h-full shadow-lg"
-                                            onLoad={() => setIsLoading(false)}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="w-full max-w-[300px] h-[200px] bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
-                                        No Image Available
-                                    </div>
-                                )}
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                                <div className="space-y-1 border rounded-md p-2 shadow-md border-gray-700">
+                                    {[
+                                        { label: "Total Price", value: `$${Number(clickedCard?.total_price).toFixed(2)}` },
+                                        { label: "Satellite Name", value: clickedCard?.satelliteName },
+                                        {
+                                            label: "Date",
+                                            value: clickedCard?.imagingTime
+                                                ? new Intl.DateTimeFormat("en-US", {
+                                                    year: "numeric",
+                                                    month: "short",
+                                                    day: "2-digit",
+                                                }).format(new Date(clickedCard.imagingTime.replace(" ", "T")))
+                                                : "",
+                                        },
+                                        { label: "Cloud Cover", value: `${clickedCard?.cloudPercent}%` },
+                                        {
+                                            label: "Price per Km²",
+                                            value: `$${clickedCard?.price_per_sqkm}/km²`,
+                                        },
+                                        {
+                                            label: "Minimum Order Size",
+                                            value: `${clickedCard?.min_order_size} km²`,
+                                        },
+                                        { label: "Satellite ID", value: clickedCard?.satelliteId },
+                                        { label: "Area", value: `${Number(clickedCard?.area_sq_km).toFixed(2)} km²` },
+                                    ].map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex justify-between border-gray-700 "
+                                        >
+                                            <span className="font-semibold text-sm text-gray-300">{item.label}:</span>
+                                            <span className="text-gray-400 text-sm">{item.value}</span>
+                                        </div>
+                                    ))}
 
-                    {/* <Dialog open={addToCart} onOpenChange={setAddToCart}>
-
-                        <DialogContent className="bg-[#202A33] border border-gray-600 rounded-lg h-[calc(100vh-50px)] overflow-y-auto p-5 text-white min-w-[60%]">
-                            <DialogHeader>
-                                <DialogTitle className="text-xl font-bold text-center text-gray-200">
-                                    Add to Cart
-                                </DialogTitle>
-                            </DialogHeader>
-                            <div className='flex justify-between items-center gap-2'>
-                                <div className="flex w-full items-center gap-2 border rounded-md p-2 shadow-md border-gray-700">
-                                    <div className="flex justify-center relative">
-                                        {clickedCard?.jpg ? (
-                                            <div className="w-16 h-20 flex-shrink-0 relative">
-                                                {isLoading && (
-                                                    <div className="absolute text-gray-400">Loading...</div>
-                                                )}
-                                                <Image
-                                                    src={clickedCard.jpg}
-                                                    width={200}
-                                                    height={200}
-                                                    alt="Satellite Image"
-                                                    className="rounded-lg object-cover w-full h-full shadow-lg"
-                                                    onLoad={() => setIsLoading(false)}
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="w-16 h-20 flex-shrink-0 bg-gray-700 rounded-lg flex text-xs items-center justify-center text-gray-400">
-                                                No Image Available
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex flex-col flex-grow gap-1">
-                                        <span className="text-md font-bold">
-                                            {clickedCard?.imagingTime
-                                                ? new Intl.DateTimeFormat('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: '2-digit',
-                                                }).format(new Date(clickedCard.imagingTime.replace(' ', 'T')))
-                                                : ''}
-                                        </span>
-                                        <span className="text-xs text-gray-300">
-                                            Satellite: {clickedCard?.satelliteName}
-                                        </span>
-                                        <span className='text-xs text-gray-300'>
-                                            Cloud: {clickedCard?.cloudPercent?.toFixed(2)}%
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col items-center gap-1">
-                                        <span className="text-md font-bold">
-                                            ${clickedCard?.price_per_sqkm}/km<sup>2</sup>
-                                        </span>
-                                        <span className="text-xs">
-                                            Min.size: {clickedCard?.min_order_size} km<sup>2</sup>
-                                        </span>
-                                    </div>
                                 </div>
-                                <div className='w-full flex justify-around'>
-                                    <button
-                                        className="bg-[#202A33] border border-gray-600 rounded-lg px-4 py-2 text-white text-sm transition-all duration-300 ease-in-out hover:bg-gray-700 hover:border-gray-400"
-                                        onClick={handleFullImage}
-                                    >
-                                        Full Image
-                                    </button>
-                                    <button
-                                        className="bg-[#202A33] border border-gray-600 rounded-lg px-4 py-2 text-white text-sm transition-all duration-300 ease-in-out hover:bg-gray-700 hover:border-gray-400"
-                                    // onClick={handleDrawPolygon}
-                                    >
-                                        Draw Polygon
-                                    </button>
+
+                                {/* Image Section */}
+                                <div className="mt-4 flex justify-center">
+                                    {clickedCard?.jpg ? (
+                                        <div className="relative w-full max-w-[300px] h-[200px] flex items-center justify-center">
+                                            {isLoading && (
+                                                <div className="absolute text-gray-400">Loading...</div>
+                                            )}
+                                            <Image
+                                                src={clickedCard.jpg}
+                                                width={200}
+                                                height={200}
+                                                alt="Satellite Image"
+                                                className="rounded-lg object-cover w-full h-full shadow-lg"
+                                                onLoad={() => setIsLoading(false)}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="w-full max-w-[300px] h-[200px] bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
+                                            No Image Available
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
+                            </DialogContent>
+                        </Dialog>
+
+                        {filterProduct.map((obj, index) => (
                             <div
-                                ref={mapRef}
-                                className='rounded-md w-full border border-gray-700 shadow-md'
-                                style={{ height: '400px' }}
+                                key={`${obj?.id}-${index}`} // Use a combination of id and index as the key
+                                className="bg-[#202A33] border border-gray-600 overflow-hidden mx-2 my-2 rounded-lg text-white p-2 flex items-center gap-4 hover:bg-[#28455e] transition-all"
+                                onMouseEnter={() => handleMouseEnter(obj?.imageGeo, obj?.jpg)}
+                                onMouseLeave={handleMouseLeave}
+                                onClick={() => handleCardDetails(obj)}
                             >
-                            </div>
-                            <DialogFooter>
-                                <div className='flex w-1/3 justify-between gap-2'>
-                                    <Button
-                                        className='bg-[#2b3a4a] hover:bg-[#28455e] hover:text-white w-full'
-                                        onClick={() => setAddToCart(false)}
-                                    >
-                                        Close
-                                    </Button>
-                                    <Button className='bg-[#2b3a4a] hover:bg-[#28455e] hover:text-white w-full'>
-                                        Submit
-                                    </Button>
+                                {/* Image Section */}
+                                <div className="w-16 h-24 flex-shrink-0">
+                                    {obj.jpg ? (
+                                        <Image
+                                            src={obj?.jpg}
+                                            width={80}
+                                            height={80}
+                                            alt="Satellite Image"
+                                            className="rounded-md object-cover w-full h-full"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gray-700 rounded-md"></div>
+                                    )}
                                 </div>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog> */}
 
-                    {filterProduct.map((obj, index) => (
-                        <div
-                            key={`${obj?.id}-${index}`} // Use a combination of id and index as the key
-                            className="bg-[#202A33] border border-gray-600 overflow-hidden mx-2 my-2 rounded-lg text-white p-2 flex items-center gap-4 hover:bg-[#28455e] transition-all"
-                            onMouseEnter={() => handleMouseEnter(obj?.imageGeo, obj?.jpg)}
-                            onMouseLeave={handleMouseLeave}
-                            onClick={() => handleCardDetails(obj)}
-                        >
-                            {/* Image Section */}
-                            <div className="w-16 h-20 flex-shrink-0">
-                                {obj.jpg ? (
-                                    <Image
-                                        src={obj?.jpg}
-                                        width={80}
-                                        height={80}
-                                        alt="Satellite Image"
-                                        className="rounded-md object-cover w-full h-full"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gray-700 rounded-md"></div>
-                                )}
+                                {/* Details Section */}
+                                <div className="flex flex-col flex-grow gap-1">
+                                    <span className="text-sm font-bold">
+                                        {obj?.imagingTime
+                                            ? new Intl.DateTimeFormat('en-US', {
+                                                year: 'numeric',
+                                                month: 'short',
+                                                day: '2-digit',
+                                            }).format(new Date(obj.imagingTime.replace(' ', 'T')))
+                                            : ''}
+                                    </span>
+                                    <span className="text-xs text-gray-300">Satellite: {obj?.satelliteName}</span>
+                                    <span className='text-xs text-gray-300'>Cloud: {obj?.cloudPercent?.toFixed(2)}%</span>
+
+                                    <span className="text-xs text-gray-300">Area: {Number(obj?.area_sq_km).toFixed(2)}/km<sup>2</sup></span>
+                                    <span className="text-xs text-gray-300">Min.size: {obj?.min_order_size} km<sup>2</sup></span>
+                                </div>
+
+                                {/* Price & Min Order Size Above Checkbox */}
+                                <div className="flex flex-col items-center gap-1">
+
+                                    <span className="text-md font-bold">${obj?.price_per_sqkm}/km<sup>2</sup></span>
+
+                                    <span className="text-xs font-bold">Price: ${Number(obj?.total_price).toFixed(2)}</span>
+
+
+                                    <button
+                                        onClick={(e) => handleAddToCartClick(obj, e)}
+                                        disabled={isProductInCart(obj)}
+                                        className={`mt-2 rounded-2xl p-1 text-xs transition-all duration-300 ease-in-out
+                                    ${isProductInCart(obj)
+                                                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                                                : 'bg-[#202A33] border border-gray-600 text-white hover:bg-gray-700 hover:border-gray-400'
+                                            }`}
+                                    >
+                                        {isProductInCart(obj) ? 'Added' : 'Add to Cart'}
+                                    </button>
+
+                                </div>
                             </div>
-
-                            {/* Details Section */}
-                            <div className="flex flex-col flex-grow gap-1">
-                                <span className="text-md font-bold">
-                                    {obj?.imagingTime
-                                        ? new Intl.DateTimeFormat('en-US', {
-                                            year: 'numeric',
-                                            month: 'short',
-                                            day: '2-digit',
-                                        }).format(new Date(obj.imagingTime.replace(' ', 'T')))
-                                        : ''}
-                                </span>
-                                <span className="text-xs text-gray-300">Satellite: {obj?.satelliteName}</span>
-                                <span className='text-xs text-gray-300'>Cloud: {obj?.cloudPercent?.toFixed(2)}%</span>
-                            </div>
-
-                            {/* Price & Min Order Size Above Checkbox */}
-                            <div className="flex flex-col items-center gap-1">
-                                <span className="text-md font-bold">${obj?.price_per_sqkm}/km<sup>2</sup></span>
-
-                                {/* Checkbox */}
-                                <button
-                                    onClick={(e) => handleAddToCartClick(obj, e)}
-                                    className='mt-2 bg-[#202A33] border border-gray-600 rounded-2xl p-1 text-white text-xs transition-all duration-300 ease-in-out hover:bg-gray-700 hover:border-gray-400'
-                                >
-                                    Add to Cart
-                                </button>
-
-                                {/* <button
-                                    onClick={() => handleCheckboxChange(obj, !selectedSatellites[obj.satelliteName]?.some(satellite => satellite.id === obj.id))}
-                                    className={`mt-2 bg-[#202A33] border border-gray-600 rounded-2xl p-1 text-white text-xs transition-all duration-300 ease-in-out 
-${selectedSatellites[obj.satelliteName]?.some(satellite => satellite.id === obj.id) ? 'bg-gray-600' : 'hover:bg-gray-700 hover:border-gray-400'}
-`}
-                                >
-                                    {selectedSatellites[obj.satelliteName]?.some(satellite => satellite.id === obj.id) ? 'Added' : 'Add to Cart'}
-                                </button> */}
-                                <span className="text-xs">Min.size: {obj?.min_order_size} km<sup>2</sup></span>
-                            </div>
-                        </div>
-                    ))}
-
-
+                        ))}
+                    </InfiniteScroll>
                 </div>
             )}
 

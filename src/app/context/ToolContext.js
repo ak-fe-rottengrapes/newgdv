@@ -26,6 +26,7 @@ export function ToolProvider({ children }) {
     JILIN: [],
     MAXAR: [],
   });
+  const [addToCartId, setAddToCartId] = useState([]);
 
   return (
     <ToolContext.Provider 
@@ -61,7 +62,9 @@ export function ToolProvider({ children }) {
         operatorGeoData, 
         setOperaorGeoData,
         selectedSatellitesDetails, 
-        setSelectedSatellitesDetails
+        setSelectedSatellitesDetails,
+        addToCartId, 
+        setAddToCartId
       }}
     >
       {children}

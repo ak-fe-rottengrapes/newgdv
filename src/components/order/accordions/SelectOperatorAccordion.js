@@ -21,9 +21,9 @@ const operatorOptions = [
   },
   {
     id: 'maxar',
-    label: 'Maxar',
-    value: 'Maxar',
-    imagePath: '/assets/operators/Maxar.png'
+    label: 'MAXAR',
+    value: 'MAXAR',
+    imagePath: '/assets/operators/MAXAR.jpg'
   },
   {
     id: 'airbus',

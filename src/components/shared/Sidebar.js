@@ -125,7 +125,17 @@ export function Sidebar() {
         // Mobile styles
         "md:translate-x-0",
         isMobileOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      )}
+      onMouseEnter={(e) => {
+        if (window.innerWidth >= 768) { // md breakpoint
+          setIsCollapsed(false);
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (window.innerWidth >= 768) { // md breakpoint
+          setIsCollapsed(true);
+        }
+      }}>
         <div className="flex-1">
           <div className="flex h-16 items-center justify-between px-3 border-b border-gray-700">
             {!isCollapsed && <h2 className="text-lg font-semibold">Dashboard</h2>}

@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { getSession } from 'next-auth/react';
+import { PulseLoader } from 'react-spinners';
 
 const Login = () => {
   const { toast } = useToast();
@@ -49,6 +50,18 @@ const Login = () => {
     if (!captchaValid) {
       return;
     }
+    const isValid = validateCaptcha(captchaInput);
+    if (!isValid) {
+      toast({
+        title: 'Invalid Captcha',
+        description: 'Please enter the correct CAPTCHA',
+        variant: "destructive",
+        status: 'error',
+        duration: 2000,
+      });
+      return;
+    }
+    
 
     setLoading(true);
 
@@ -229,7 +242,7 @@ const Login = () => {
               text-lg sm:text-xl font-medium'
             disabled={loading}
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? <PulseLoader size={4} color="#ffffff" /> : 'Sign In'}
           </button>
         </form>
       </div>
