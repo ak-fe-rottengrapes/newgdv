@@ -5,6 +5,7 @@ import Logo from '../images/Logo.png';
 import { CiMenuBurger } from "react-icons/ci";
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { Button } from '@/components/ui/button';
 
 function NavBar() {
   const { data: session, status } = useSession();
@@ -83,15 +84,9 @@ function NavBar() {
       </div>
 
       <div className='md:hidden  shadow-black flex items-center ml-auto'>
-        <button onClick={handleOrderNow} className='shadow-sm shadow-gray-800 block px-4 py-2 font-bold text-center text-white bg-[#FF000A] rounded-md hover:bg-[#ee3636]'>
-        {isLoading ? (
-            <div className='w-full flex justify-center'>
-              <Spinner size="sm" color="white" />
-            </div>
-          ) : (
-            "Order Now"
-          )}
-        </button>
+        <Button onClick={handleOrderNow} className='shadow-sm shadow-gray-800 block px-4 py-2 font-bold text-center text-white bg-[#FF000A] rounded-md hover:bg-[#ee3636]'>
+        {isLoading ? <PulseLoader size={4} color="#ffffff" /> : 'Order'}
+        </Button>
       </div>
 
       {isMenuOpen && (
