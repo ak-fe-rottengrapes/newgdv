@@ -161,7 +161,7 @@ const Login = () => {
         <h1 className='text-2xl sm:text-3xl font-bold text-black'>Sign in</h1>
         <p className='mt-2 text-xs sm:text-sm text-gray-500 text-center'>
           New to Geodatavault?
-          <span className='text-blue-500 cursor-pointer hover:underline'> Sign up for free</span>
+          <span onClick={()=>router.push('/auth/sign-up')} className='text-blue-500 cursor-pointer hover:underline'> Sign up for free</span>
         </p>
         
         <form className='w-full max-w-md flex flex-col gap-4 mt-6 sm:mt-10' onSubmit={handleSubmit}>

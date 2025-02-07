@@ -5,12 +5,10 @@ import { ToolProvider } from "../context/ToolContext";
 
 export default function RootLayout({ children }) {
   return (
-    <SessionProvider>
       <ToolProvider>
         <UserLayout>
           {children}
         </UserLayout>
       </ToolProvider>
-    </SessionProvider>
   )
 } 

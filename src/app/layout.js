@@ -1,8 +1,8 @@
-
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MapProvider from './context/MapContext';
 import { Toaster } from "@/components/ui/toaster"
+import { SessionProvider } from "next-auth/react";
+import Providers from "@/components/layouts/Providers";
 
 export const metadata = {
   title: "Geodatavault",
@@ -15,10 +15,10 @@ export default function RootLayout({ children }) {
       <body
         className={``}
       >
-          <MapProvider>
-            {children}
-            <Toaster />
-          </MapProvider>
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );
