@@ -58,7 +58,6 @@ export const DeleteMultipleUser = async (token, body) => {
     }
 };
 
-
 export const aprroveUser = async (token, userId) => {
     try {
         const response = await axios.patch(`${api_url}/users/${userId}` ,{},{

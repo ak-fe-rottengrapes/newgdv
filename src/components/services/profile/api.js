@@ -48,3 +48,17 @@ export const completeProfile = async (profileData) => {
         throw new Error("Failed to complete profile");
     }
 }
+
+
+export const forgetPassword = async (email) => {
+    try {
+        const response = await axios.post(`${api_url}/password-forgot/`, email, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        })
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response ? error.response.data : "Failed to send password reset");
+    }
+}

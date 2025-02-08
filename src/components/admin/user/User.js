@@ -25,6 +25,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import { Dialog as ConfirmDialog, DialogContent as ConfirmDialogContent, DialogHeader as ConfirmDialogHeader, DialogTitle as ConfirmDialogTitle, DialogFooter as ConfirmDialogFooter } from "@/components/ui/dialog"
+import UserFilterPopover from './UserFilterPopover'
+import UserDetailsDialog from './UserDetailsDialog'
 
 const User = () => {
     const { data: session } = useSession();
@@ -194,11 +196,12 @@ const User = () => {
                 const response = await aprroveUser(session?.user?.access, userId)
                 toast({
                     title: 'Success',
-                    description: response.message,
+                    description: 'User approved successfully',
                     status: 'success',
                     duration: 2000,
                     className: 'bg-green-200',
                 })
+                setFilteredList(filteredList.map(user => user.id === userId ? { ...user, is_active: true } : user));
             } catch (error) {
                 toast({
                     title: 'Error',
@@ -209,6 +212,7 @@ const User = () => {
                 })
             } finally {
                 setApproveLoading(false);
+                setOpen(false);
             }
         } else {
             toast({
@@ -264,20 +268,29 @@ const User = () => {
         const selectedIds = selectedRows.map(row => row.id);
         setSelectedUsers(selectedIds);
     };
-
+    const [deleteLoader, setDeleteLoader] = useState(false);
     const handleDelete = async () => {
         if (session?.user?.access) {
             try {
-                const response = DeleteMultipleUser(session?.user?.access, { user_ids: selectedUsers });
-                if (response) {
+                if(selectedUsers.length === 0){
                     toast({
-                        title: 'Success',
-                        description: response.message,
-                        status: 'success',
+                        title: 'Error',
+                        description: 'Please select at least one user to delete',
+                        status: 'error',
                         duration: 2000,
-                        className: 'bg-green-200',
-                    })
+                        variant: 'destructive',
+                    });
+                    return;
                 }
+                setDeleteLoader(true);
+                const response = await DeleteMultipleUser(session?.user?.access, { user_ids: selectedUsers });
+                toast({
+                    title: 'Success',
+                    description: 'Selected users deleted successfully',
+                    status: 'success',
+                    duration: 2000,
+                    className: 'bg-green-200',
+                });
                 setFilteredList(filteredList.filter(user => !selectedUsers.includes(user.id)));
             } catch (error) {
                 toast({
@@ -286,64 +299,35 @@ const User = () => {
                     status: 'error',
                     duration: 2000,
                     variant: "destructive",
-                })
+                });
             } finally {
                 setSelectedUsers([]);
+                setDeleteLoader(false);
+                setConfirmOpen(false);
             }
+        } else {
+            toast({
+                title: 'Error',
+                description: 'Session expired. Please login again',
+                status: 'error',
+                duration: 2000,
+                variant: "destructive",
+            });
         }
-    }
+    };
 
     const handleDeleteConfirm = () => {
         handleDelete();
-        setConfirmOpen(false);
     };
 
     useEffect(() => {
         console.log("Selected users:", selectedUsers);
     }, [selectedUsers]);
 
-    const ComboboxDemo = () => {
-        const [open, setOpen] = useState(false);
-
-        return (
-            <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-[110px] text-white hover:text-white hover:bg-[#303d4b] bg-[#3e4f61] justify-between">
-                        {filter}
-                        <ChevronsUpDown className="opacity-50" />
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[200px] p-0 ">
-                    <Command className='bg-[#3e4f61] text-white'>
-                        <CommandInput placeholder="Search..." />
-                        <CommandList>
-                            <CommandEmpty>No status found.</CommandEmpty>
-                            <CommandGroup className='text-white'>
-                                {["All", "Active", "Inactive"].map(status => (
-                                    <CommandItem
-                                        key={status}
-                                        value={status}
-                                        onSelect={() => {
-                                            setFilter(status);
-                                            setOpen(false);
-                                        }}
-                                    >
-                                        {status}
-                                        <Check className={cn("ml-auto", filter === status ? "opacity-100" : "opacity-0")} />
-                                    </CommandItem>
-                                ))}
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-        );
-    };
-
     return (
         <div className='flex flex-col items-center justify-center p-2'>
             <div className='flex justify-between items-center border rounded-md border-gray-500 shadow-lg p-2 w-full bg-[#2b3a4a]'>
-                <div><ComboboxDemo /></div>
+                <div><UserFilterPopover filter={filter} setFilter={setFilter} /></div>
                 <div className='text-base font-semibold text-white'>
                     <span>
                         Users
@@ -354,93 +338,23 @@ const User = () => {
                 </div>
             </div>
 
-            <div className='flex flex-col overflow-y-auto h-[calc(100vh-150px)] border rounded-md border-gray-500 shadow-lg p-2 w-full mt-2 bg-[#3e4f61]'>
-                <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogContent className="bg-[#2b3a4a] border border-gray-500 shadow-lg text-white max-w-2xl">
-                        <DialogHeader className=" border-gray-500 pb-4">
-                            <DialogTitle className="text-xl font-semibold text-white">User Details</DialogTitle>
-                        </DialogHeader>
-                        <div className="mt-4">
-                            {loading ? (
-                                <div className="flex justify-center items-center w-full h-full p-4">
-                                    <PulseLoader size={10} color="#ffffff" />
-                                </div>
-                            ) : (
-                                user && (
-                                    <div className="text-gray-200 border-gray-500 ">
-                                        <div className='border rounded-md p-2 shadow-md border-gray-600'>
-
-                                            <div className="grid grid-cols-2 gap-2">
-                                                {[
-                                                    { label: "ID", value: user.id },
-                                                    { label: "Name", value: `${user.first_name} ${user.last_name}` },
-                                                    { label: "Email", value: user.email },
-                                                    { label: "Mobile", value: `${user.country_code} ${user.mobile}` },
-                                                    { label: "Address", value: user.address },
-                                                    { label: "Company Name", value: user.company_name },
-                                                    { label: "Company Business", value: user.company_business },
-                                                    { label: "Company Type", value: user.company_type },
-                                                    { label: "Profile Type", value: user.profile_type },
-                                                    { label: "Job Title", value: user.job_title },
-                                                    {
-                                                        label: "Status",
-                                                        value: (
-                                                            <span className={user.is_active ? "text-green-400" : "text-red-400"}>
-                                                                {user.is_active ? "Active" : "Inactive"}
-                                                            </span>
-                                                        ),
-                                                    },
-                                                    {
-                                                        label: "Profile Complete",
-                                                        value: (
-                                                            <span className={user.profile_complete ? "text-green-400" : "text-yellow-400"}>
-                                                                {user.profile_complete ? "Yes" : "No"}
-                                                            </span>
-                                                        ),
-                                                    },
-                                                ].map((item, index) => (
-                                                    <div key={index} className="flex justify-between border p-2 flex-col rounded-md shadow-md border-gray-600 pb-2 ">
-                                                        <strong className="text-white text-sm">{item.label}:</strong>
-                                                        <span className="text-gray-200 text-xs">{item.value}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        {!user.profile_complete ? (
-                                            <div className='flex justify-end gap-4 mt-6'>
-                                                <span>Profile Is Incomplete</span>
-                                            </div>
-                                        ) : (
-
-                                            <div className="flex justify-end gap-4 mt-6">
-                                                <Button
-                                                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors w-[140px] flex justify-center items-center"
-                                                    onClick={() => rejectUserHandler(user.id)}
-                                                >
-                                                    {rejectLoader ? <PulseLoader size={8} color="#ffffff" /> : "Reject User"}
-                                                </Button>
-
-                                                <Button
-                                                    className="bg-green-600 text-white rounded hover:bg-green-700 transition-colors px-4 py-2 w-[140px] flex justify-center items-center"
-                                                    onClick={() => onSubmit(user.id)}
-                                                >
-                                                    {approveLoading ? <PulseLoader size={8} color="#ffffff" /> : "Approve User"}
-                                                </Button>
-
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                            )}
-                        </div>
-                    </DialogContent>
-                </Dialog>
+            <div className='flex flex-col overflow-y-auto h-[calc(100vh-143px)] border rounded-md border-gray-500 shadow-lg p-2 w-full mt-2 bg-[#3e4f61]'>
+                <UserDetailsDialog 
+                    open={open}
+                    setOpen={setOpen}
+                    loading={loading}
+                    user={user}
+                    rejectLoader={rejectLoader}
+                    approveLoading={approveLoading}
+                    rejectUserHandler={rejectUserHandler}
+                    onSubmit={onSubmit}
+                />
                 <ConfirmDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                     <ConfirmDialogContent className="bg-[#2b3a4a] border border-gray-500 shadow-lg text-white max-w-md">
-                        <ConfirmDialogHeader className="border-gray-500 pb-4">
+                        <ConfirmDialogHeader className="border-gray-500">
                             <ConfirmDialogTitle className="text-xl font-semibold text-white">Confirm Delete</ConfirmDialogTitle>
                         </ConfirmDialogHeader>
-                        <div className="mt-4 text-white">
+                        <div className="text-white">
                             Are you sure you want to delete the selected users?
                         </div>
                         <ConfirmDialogFooter className="flex justify-end gap-4 mt-6">
@@ -454,7 +368,7 @@ const User = () => {
                                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                                 onClick={handleDeleteConfirm}
                             >
-                                Delete
+                                {deleteLoader ? <PulseLoader size={8} color="#ffffff" /> : "Delete"}
                             </Button>
                         </ConfirmDialogFooter>
                     </ConfirmDialogContent>
@@ -469,38 +383,24 @@ const User = () => {
                 </div>
                 <div className='border rounded-md border-gray-500 shadow-lg w-full bg-[#2b3a4a]'>
                     {isLoading ? (
-                        <div className="w-full h-[calc(100vh-155px)]">
-                            <div className='flex-1  m-2 h-10 bg-gray-700 rounded mx-1 animate-pulse'></div>
-                            <div className='m-2 flex flex-col gap-3'>
-                                {[1, 2, 3, 4, 5].map((_, rowIndex) => (
-                                    <div
-                                        key={rowIndex}
-                                        className="w-full  h-10 bg-gray-700 rounded my-1 animate-pulse"
-                                    ></div>
-                                ))}
-                            </div>
-                            <div className="flex justify-between items-center bg-[#2b3a4a] p-3 rounded-b">
-                                <div className="w-20 h-6 bg-gray-700 rounded animate-pulse"></div>
-                                <div className="flex gap-2">
-                                    <div className="w-6 h-6 bg-gray-700 rounded animate-pulse"></div>
-                                    <div className="w-6 h-6 bg-gray-700 rounded animate-pulse"></div>
-                                    <div className="w-6 h-6 bg-gray-700 rounded animate-pulse"></div>
-                                </div>
-                            </div>
+                        <div className="w-full h-[calc(100vh-220px)] flex justify-center items-center">
+                            <PulseLoader size={8} color="#ffffff" />
                         </div>
                     ) : (
-
-                        <DataTable
-                            columns={columns}
-                            data={filteredList}
-                            pagination
-                            pointerOnHover
-                            selectableRows
-                            onSelectedRowsChange={handleSelect}
-                            onRowClicked={(row) => onClickHandler(row.id)}
-                            customStyles={customStyles}
-                            clearSelectedRows={false}
-                        />
+                        <div className='w-full overflow-x-scroll'>
+                            <DataTable
+                                columns={columns}
+                                data={filteredList}
+                                pagination
+                                pointerOnHover
+                                selectableRows
+                                onSelectedRowsChange={handleSelect}
+                                onRowClicked={(row) => onClickHandler(row.id)}
+                                customStyles={customStyles}
+                                clearSelectedRows={false}
+                                responsive
+                            />
+                        </div>
                     )}
                 </div>
             </div>

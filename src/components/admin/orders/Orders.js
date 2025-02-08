@@ -118,7 +118,7 @@ const Orders = () => {
                     <Trash2 size={16} color='#ffffff' />
                 </div>
             </div>
-            <div className='flex flex-col overflow-y-auto h-[calc(100vh-130px)] border rounded-md border-gray-500 shadow-lg p-2 w-full mt-2'>
+            <div className='flex flex-col overflow-y-auto h-[calc(100vh-143px)] border rounded-md border-gray-500 shadow-lg p-2 w-full mt-2'>
                 {loading ? (
                     <div className="flex flex-col w-full h-full">
                         {/* Repeat the skeleton loader for each item in the list */}

@@ -1,50 +1,67 @@
 "use client"
 import React from "react";
 import { useState, useEffect } from "react";
-import { Spinner } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
-import axios from "axios";
-import { forgetPassword } from "@/app/user/services/api";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { forgetPassword } from "@/components/services/profile/api";
+import { useToast } from "@/hooks/use-toast";
+import { PulseLoader } from "react-spinners";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Forget_password() {
+  const router = useRouter(); 
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     mode: "onSubmit",
   });
-  
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
       const response = await forgetPassword({ email: data.email });
       console.log(response);
-      toast.success("Password reset email sent successfully.");
+      toast({
+        title: "Success",
+        description: 'Check your email for password reset link',
+        status: "success",
+        className: 'bg-green-200',
+        duration: 2000,
+      })
+      router.push('/auth/login');
     } catch (error) {
-      toast.error(error.message || "Unable to send request");
+      toast({
+        title: "Error",
+        description: error.message,
+        status: "error",
+        variant: "destructive",
+        duration: 2000,
+      })
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center  Login-div font-poppins">
+    <div className="relative w-screen h-screen flex items-center justify-center bg-[#1f2937] font-poppins">
+      <Image
+        src="/loginBG.png"
+        alt="Login Background"
+        layout="fill"
+        className="object-cover z-0"
+        priority
+      />
       <form
-        className="sm:max-w-md  w-full rounded-3xl flex flex-col  justify-center bg-white py-8  px-8  font-poppins mx-4 loginForm"
+        className="relative z-10 sm:max-w-md w-full rounded-3xl flex flex-col justify-center bg-white py-8 px-8 mx-4"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <h1
-            className=" text-2xl font-semibold text-center"
-            style={{ color: "rgba(49, 48, 57, 1)" }}
-          >
-            Forgot Password
-          </h1>
+        <h1 className="text-2xl font-semibold text-center text-black mb-4">
+          Forgot Password
+        </h1>
         <div className="py-2">
           <label
-            className="text-left font-normal text-base"
-            style={{ color: "rgba(73, 71, 90, 1)" }}
+            className="text-left font-normal text-base text-gray-800"
             htmlFor="email"
           >
             Email address
@@ -54,13 +71,12 @@ export default function Forget_password() {
             name="email"
             placeholder="Enter your Email Id"
             type="email"
-            className="border w-full border-slate-400 rounded-md p-2 mt-1"
-            onChange={(e) => setEmail(e.target.value)}
+            className="border w-full border-gray-800 rounded-md p-2 mt-1 text-white placeholder-gray-400"
             {...register("email", {
               required: "Email is required",
               pattern: {
                 value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: "Invalid email address",
+                message: "Invalid email address",
               }
             })}
           />
@@ -69,15 +85,16 @@ export default function Forget_password() {
           )}
         </div>
 
-
         <button
           type="submit"
-          className="flex w-full justify-center p-2 rounded-md my-2 bg-customDarkGray sign-in  border-transparent hover:bg-black transition-all ease-in-out duration-300 "
+          className='mt-4 w-full bg-gray-800 text-white py-2 sm:py-3 rounded-md 
+              hover:bg-black transition-colors duration-300 
+              text-lg sm:text-xl font-medium'
         >
           {loading ? (
-            <Spinner size="md" color="white" />
+            <PulseLoader size={8} color="#ffffff" />
           ) : (
-            <p style={{ color: "#FFFFFF" }} className="text-xl font-medium">
+            <p className="text-xl font-medium text-white">
               Submit
             </p>
           )}
