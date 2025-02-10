@@ -10,6 +10,9 @@ export const getOperatorData = async (
     cloudpercent,
     start_date,
     end_date,
+    resolution,
+    off_nadir,
+    image_type,
     token) => {
     try {
         const response = await axios.get(`${api_url}/satellite`, {
@@ -24,7 +27,10 @@ export const getOperatorData = async (
                 geo,
                 cloudpercent,
                 start_date,
-                end_date
+                end_date,
+                resolution,
+                off_nadir,
+                image_type
             },
         });
         return response.data;

@@ -8,9 +8,9 @@ export default function Providers({ children }) {
   return (
     <SessionProvider>
       <MapProvider>
-      <UserProvider>
-        {children}
-      </UserProvider>
+        <UserProvider>
+          {children}
+        </UserProvider>
       </MapProvider>
     </SessionProvider>
   )

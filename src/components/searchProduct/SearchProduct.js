@@ -32,6 +32,7 @@ import { useRouter } from 'next/navigation';
 import AddToCartDialog from './AddToCartDialog';
 import { useToast } from '@/hooks/use-toast';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import { ShoppingCart } from 'lucide-react';
 
 export default function SearchProduct() {
     const { data: session } = useSession();
@@ -91,12 +92,6 @@ export default function SearchProduct() {
         setShowFull(prev => !prev);
     };
 
-    // Reference to the map container and the map instance
-    const mapRef = useRef(null)
-    const mapInstance = useRef(null)
-
-
-
     const formatOperators = () => {
         if (!operators || operators.length === 0) return '';
         return operators.join(',');
@@ -107,7 +102,6 @@ export default function SearchProduct() {
         try {
             if (operators && date_from && date_to && operatorGeoData) {
                 setIsLoading(true);
-                console.log('Fetching page:', pageNum); // Debug log
                 const response = await getOperatorData(
                     formatOperators(),
                     pageNum,
@@ -116,42 +110,71 @@ export default function SearchProduct() {
                     cloud_cover_percentage,
                     date_from,
                     date_to,
+                    resolution,
+                    ona_percentage,
+                    order_type,
                     session?.user?.access
                 );
-                
+
+                // Handle successful response
                 const combinedProducts = [
                     ...(response.Jilin || []),
                     ...(response.Maxar || [])
                 ].filter(Boolean);
-
-                console.log('Received products:', combinedProducts.length); // Debug log
 
                 if (pageNum === 1) {
                     setProductList(combinedProducts);
                 } else {
                     setProductList(prev => [...prev, ...combinedProducts]);
                 }
-                
-                // Only set hasMore to false if we received fewer items than requested
+
                 setHasMore(combinedProducts.length >= ITEMS_PER_PAGE);
             } else {
                 router.push('/user/order');
                 toast({
-                    title: "Error",
+                    title: "Missing Parameters",
                     description: "Please select an operator, date range, and area to search for products",
-                    // variant: "destructive",
                     className: 'bg-yellow-200 text-black',
                     duration: 2000,
                 })
             }
         } catch (error) {
-            console.error('Error fetching data:', error); // Debug log
+            // Handle different types of errors
+            let errorMessage = "An unexpected error occurred";
+
+            if (error.response) {
+                // Server responded with an error status
+                switch (error.response.status) {
+                    case 400:
+                        errorMessage = "Invalid request parameters";
+                        break;
+                    case 401:
+                        errorMessage = "Authentication required";
+                        router.push('/login');
+                        break;
+                    case 403:
+                        errorMessage = "You don't have permission to access this resource";
+                        break;
+                    case 500:
+                        errorMessage = "Server error. Please try again later";
+                        break;
+                    default:
+                        errorMessage = error.response.data?.message || "Failed to fetch operator data";
+                }
+            } else if (error.request) {
+                // Request was made but no response received
+                errorMessage = "No response from server. Please check your connection";
+            }
+
             toast({
                 title: "Error",
-                description: "Failed to fetch operator data",
+                description: errorMessage,
                 variant: "destructive",
-                duration: 2000,
-            })
+                duration: 3000,
+            });
+
+            // Log the error for debugging
+            console.error("Operator data fetch error:", error);
         } finally {
             setIsLoading(false);
         }
@@ -249,40 +272,6 @@ export default function SearchProduct() {
         setSearchTerm(e.target.value);
     };
 
-    const toggleCollapse = id => {
-        setCollapsedIds(prevState => ({
-            ...prevState,
-            [id]: !prevState[id],
-        }));
-    };
-
-    const handleCheckboxChange = (product, checked) => {
-        let updatedSatellites = { ...selectedSatellites };
-        let updatedSatellitesDetails = { ...selectedSatellitesDetails };
-
-        if (checked) {
-            if (!updatedSatellites[product.satelliteName]) {
-                updatedSatellites[product.satelliteName] = [];
-                updatedSatellitesDetails[product.satelliteName] = [];
-            }
-            updatedSatellites[product.satelliteName].push(product);
-            updatedSatellitesDetails[product.satelliteName].push(product);
-        } else {
-            updatedSatellites[product.satelliteName] = updatedSatellites[product.satelliteName].filter(
-                satellite => satellite.id !== product.id
-            );
-            updatedSatellitesDetails[product.satelliteName] = updatedSatellitesDetails[product.satelliteName].filter(
-                satellite => satellite.id !== product.id
-            );
-            if (updatedSatellites[product.satelliteName].length === 0) {
-                delete updatedSatellites[product.satelliteName];
-                delete updatedSatellitesDetails[product.satelliteName];
-            }
-        }
-
-        setSelectedSatellites(updatedSatellites);
-        setSelectedSatellitesDetails(updatedSatellitesDetails);
-    };
     console.log("selectedSatellites", selectedSatellitesDetails);
     const OnSubmitHandler = () => {
         // setOpen(true);
@@ -318,41 +307,35 @@ export default function SearchProduct() {
         setSatelliteData(null);
         setOperaorGeoData(null);
 
-        const layers = map.getLayers().getArray();
-        layers.forEach(layer => {
-            if (layer instanceof VectorLayer) {
-                map.removeLayer(layer);
-            }
-        });
+        if (map) {
+            // Get and remove vector layers
+            const layers = map.getLayers().getArray();
+            layers.forEach(layer => {
+                if (layer instanceof VectorLayer) {
+                    // Clear source
+                    const source = layer.getSource();
+                    source.clear();
+
+                    // Remove layer
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Remove all overlays
+            const overlays = map.getOverlays();
+            overlays.clear();
+
+            // Force refresh
+            map.updateSize();
+            window.setTimeout(() => {
+                map.renderSync();
+            }, 200);
+        }
     };
 
     const filterProduct = productList.filter(product =>
         product.satelliteName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    const handleCreateOrder = async () => {
-        const generateUniqueOrderId = (userId) => {
-            const unixTimestamp = Math.floor(Date.now() / 1000);
-            const uniqueOrderId = `${userId}-${unixTimestamp}`;
-            return uniqueOrderId;
-
-        };
-        const orderIdName = generateUniqueOrderId(session?.user?.user_id);
-        const data = {
-            order_type: order_type,
-            date_from: date_from,
-            date_to: date_to,
-            resolution: resolution,
-            area: area,
-            cloud_cover_percentage: cloud_cover_percentage,
-            name: orderIdName,
-            note: note,
-            ona_percentage: ona_percentage,
-            operators: operators,
-            satellite_data: selectedSatellites,
-        }
-        console.log(data)
-    }
 
     const [clickedCard, setClickedCard] = useState(null);
     const handleCardDetails = (obj) => {
@@ -368,9 +351,9 @@ export default function SearchProduct() {
     const isProductInCart = (product) => {
         // return selectedSatellitesDetails[product.satelliteName]?.includes(item => item.id === product.id);
         return addToCartId.includes(product.id);
-    
+
     };
-    
+
     const fetchMoreData = () => {
         const nextPage = page + 1;
         setPage(nextPage);
@@ -423,8 +406,8 @@ export default function SearchProduct() {
                     </div>
                 </div>
             ) : (
-                <div 
-                    className='h-[calc(100vh-180px)] border rounded-lg overflow-y-auto' 
+                <div
+                    className='h-[calc(100vh-180px)] border rounded-lg overflow-y-auto'
                     id="scrollableDiv"
                     style={{ overflow: 'auto' }} // Ensure scrolling is enabled
                 >
@@ -477,6 +460,9 @@ export default function SearchProduct() {
                                         },
                                         { label: "Satellite ID", value: clickedCard?.satelliteId },
                                         { label: "Area", value: `${Number(clickedCard?.area_sq_km).toFixed(2)} km²` },
+                                        { label: "Resolution", value: `${clickedCard?.resolution}%` },
+                                        { label: "Off Nadir", value: `${clickedCard?.off_nadir}°` },
+
                                     ].map((item, index) => (
                                         <div
                                             key={index}
@@ -538,7 +524,7 @@ export default function SearchProduct() {
                                 </div>
 
                                 {/* Details Section */}
-                                <div className="flex flex-col flex-grow gap-1">
+                                <div className="flex flex-col flex-grow ">
                                     <span className="text-sm font-bold">
                                         {obj?.imagingTime
                                             ? new Intl.DateTimeFormat('en-US', {
@@ -548,20 +534,21 @@ export default function SearchProduct() {
                                             }).format(new Date(obj.imagingTime.replace(' ', 'T')))
                                             : ''}
                                     </span>
-                                    <span className="text-xs text-gray-300">Satellite: {obj?.satelliteName}</span>
-                                    <span className='text-xs text-gray-300'>Cloud: {obj?.cloudPercent?.toFixed(2)}%</span>
 
+                                    <span className='text-xs text-gray-300'>Cloud: {obj?.cloudPercent?.toFixed(2)}%</span>
+                                    <span className='text-xs text-gray-300'>Resolution: {obj?.resolution}%</span>
+
+                                    <span className='text-xs text-gray-300'>Off Nadir: {obj?.off_nadir}<sup>o</sup></span>
                                     <span className="text-xs text-gray-300">Area: {Number(obj?.area_sq_km).toFixed(2)}/km<sup>2</sup></span>
                                     <span className="text-xs text-gray-300">Min.size: {obj?.min_order_size} km<sup>2</sup></span>
                                 </div>
 
                                 {/* Price & Min Order Size Above Checkbox */}
-                                <div className="flex flex-col items-center gap-1">
-
+                                <div className="flex flex-col items-end ">
+                                    <span className="text-sm font-bold">{obj?.satelliteName}</span>
                                     <span className="text-md font-bold">${obj?.price_per_sqkm}/km<sup>2</sup></span>
 
                                     <span className="text-xs font-bold">Price: ${Number(obj?.total_price).toFixed(2)}</span>
-
 
                                     <button
                                         onClick={(e) => handleAddToCartClick(obj, e)}
@@ -572,7 +559,7 @@ export default function SearchProduct() {
                                                 : 'bg-[#202A33] border border-gray-600 text-white hover:bg-gray-700 hover:border-gray-400'
                                             }`}
                                     >
-                                        {isProductInCart(obj) ? 'Added' : 'Add to Cart'}
+                                        {isProductInCart(obj) ? 'Added' : <span className='flex gap-2 items-center justify-between px-2'>Add<ShoppingCart size={12} /></span>}
                                     </button>
 
                                 </div>

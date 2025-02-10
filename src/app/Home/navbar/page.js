@@ -5,7 +5,11 @@ import Logo from '../images/Logo.png';
 import { CiMenuBurger } from "react-icons/ci";
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+<<<<<<< HEAD
 import { PulseLoader } from 'react-spinners';
+=======
+import { Button } from '@/components/ui/button';
+>>>>>>> f13cf0b6b6bad5abbad56f9c10079f818c8341d6
 
 function NavBar() {
   const { data: session, status } = useSession();
@@ -84,6 +88,7 @@ function NavBar() {
       </div>
 
       <div className='md:hidden  shadow-black flex items-center ml-auto'>
+<<<<<<< HEAD
         <button onClick={handleOrderNow} className='shadow-sm shadow-gray-800 block px-4 py-2 font-bold text-center text-white bg-[#FF000A] rounded-md hover:bg-[#ee3636]'>
         {isLoading ? (
             <div className='w-full flex justify-center'>
@@ -93,6 +98,11 @@ function NavBar() {
             "Order Now"
           )}
         </button>
+=======
+        <Button onClick={handleOrderNow} className='shadow-sm shadow-gray-800 block px-4 py-2 font-bold text-center text-white bg-[#FF000A] rounded-md hover:bg-[#ee3636]'>
+        {isLoading ? <PulseLoader size={4} color="#ffffff" /> : 'Order'}
+        </Button>
+>>>>>>> f13cf0b6b6bad5abbad56f9c10079f818c8341d6
       </div>
 
       {isMenuOpen && (
