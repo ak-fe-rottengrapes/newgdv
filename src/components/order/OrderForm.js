@@ -103,7 +103,7 @@ const OrderForm = () => {
         };
     }
 
-    
+
 
     const handleSubmit = () => {
         console.log("location:", location);
@@ -114,7 +114,7 @@ const OrderForm = () => {
         console.log("date_from:", date_from);
         console.log("date_to:", date_to);
         console.log("order_type:", order_type);
-    
+
         if (
             location &&
             area !== null &&
@@ -135,7 +135,7 @@ const OrderForm = () => {
             });
         }
     };
-    
+
     const handleCancel = () => {
         setActiveTool(null);
         setImageryType('');
@@ -154,13 +154,31 @@ const OrderForm = () => {
         setOperaorGeoData(null);
 
         // Remove only vector layers from the map
-        const layers = map.getLayers().getArray();
-        layers.forEach(layer => {
-            if (layer instanceof VectorLayer) {
-                map.removeLayer(layer);
-            }
-        });
-        
+        if (map) {
+            // Get and remove vector layers
+            const layers = map.getLayers().getArray();
+            layers.forEach(layer => {
+                if (layer instanceof VectorLayer) {
+                    // Clear source
+                    const source = layer.getSource();
+                    source.clear();
+
+                    // Remove layer
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Remove all overlays
+            const overlays = map.getOverlays();
+            overlays.clear();
+
+            // Force refresh
+            map.updateSize();
+            window.setTimeout(() => {
+                map.renderSync();
+            }, 200);
+        }
+
     }
 
     return (
@@ -173,14 +191,14 @@ const OrderForm = () => {
                     <Button
                         variant="outline"
                         className={`rounded-r-none border-r-0 flex-1 bg-[#2b3a4a] hover:bg-[#212B35] hover:text-white ${order_type === "ArchiveImagery" ? "bg-[#212B35] text-white" : ""}`}
-                        onClick={() => setOrderType("ArchiveImagery")}
+                        onClick={() => setOrderType("Archive")}
                     >
                         Archive Imagery
                     </Button>
                     <Button
                         variant="outline"
                         className={`rounded-l-none flex-1 bg-[#2b3a4a] hover:bg-[#212B35] hover:text-white ${order_type === "NewImagery" ? "bg-[#212B35] text-white" : ""}`}
-                        onClick={() => setOrderType("NewImagery")}
+                        onClick={() => setOrderType("Tasking")}
                     >
                         New tasking
                     </Button>

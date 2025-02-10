@@ -578,6 +578,9 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
             price_per_sqkm: clickedCard.price_per_sqkm,
             min_order_size: clickedCard.min_order_size,
             area_sq_km: clickedCard.area_sq_km,
+            resolution: clickedCard.resolution,
+            off_nadir: clickedCard.off_nadir,
+            image_type: clickedCard.image_type
         };
     
         setSelectedSatellitesDetails(prevData => {

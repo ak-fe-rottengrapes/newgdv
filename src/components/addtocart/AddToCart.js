@@ -48,7 +48,7 @@ const AddToCart = () => {
     selectedSatellitesDetails,
     setSelectedSatellitesDetails,
     addToCartId, setAddToCartId } = useTool();
-    const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const generateUniqueOrderId = (userId) => {
@@ -76,12 +76,12 @@ const AddToCart = () => {
     const newSatelliteData = { ...satellite_data };
     // const satelliteName = satellite.satelliteName;
     const satelliteInde = newSatelliteData[satelliteName].findIndex(
-        (sat) => sat.id === satellite.id
+      (sat) => sat.id === satellite.id
     );
     newSatelliteData[satelliteName].splice(satelliteInde, 1);
     setSatelliteData(newSatelliteData);
-console.log(satellite.id)
-setAddToCartId((prev) => prev.filter((id) => id !== String(satellite.id)));
+    console.log(satellite.id)
+    setAddToCartId((prev) => prev.filter((id) => id !== String(satellite.id)));
 
   }
   console.log(addToCartId)
@@ -260,6 +260,10 @@ setAddToCartId((prev) => prev.filter((id) => id !== String(satellite.id)));
                 <span className='font-semibold'>Order Type:</span>
                 <span>{order_type}</span>
               </div>
+              <div className='flex justify-between text-xs'>
+                <span className='font-semibold'>Note:</span>
+                <span>{note}</span>
+              </div>
             </div>
           </div>
           <div className='mt-4'>
@@ -285,7 +289,7 @@ setAddToCartId((prev) => prev.filter((id) => id !== String(satellite.id)));
                       </div>
 
                       {/* Details Section */}
-                      <div className="flex flex-col flex-grow gap-1">
+                      <div className="flex flex-col flex-grow ">
                         <span className="text-md font-bold">
                           {satellite.imagingTime
                             ? new Intl.DateTimeFormat('en-US', {
@@ -295,14 +299,17 @@ setAddToCartId((prev) => prev.filter((id) => id !== String(satellite.id)));
                             }).format(new Date(satellite.imagingTime.replace(' ', 'T')))
                             : ''}
                         </span>
-                        <span className="text-xs text-gray-300">Satellite: {satellite.satelliteName}</span>
                         <span className='text-xs text-gray-300'>Cloud: {satellite.cloudPercent?.toFixed(2)}%</span>
+                        <span className="text-xs text-gray-300">Resolution: {satellite.resolution} %</span>
+                        <span className="text-xs text-gray-300">Off Nadir: {satellite.off_nadir}<sup>o</sup></span>
                         <span className="text-xs text-gray-300">Area: {satellite?.area_sq_km} km<sup>2</sup></span>
+
                         <span className="text-xs text-gray-300">Min.size: {satellite.min_order_size} km<sup>2</sup></span>
                       </div>
 
                       {/* Price & Min Order Size */}
-                      <div className="flex flex-col items-center gap-1">
+                      <div className="flex flex-col items-end">
+                        <span className="text-sm font-bold">{satellite.satelliteName}</span>
                         <span className="text-md font-bold">${satellite.price_per_sqkm}/km<sup>2</sup></span>
                         <span className="text-md font-bold">Price: ${satellite.price}</span>
                         <button className="mt-2 bg-[#202A33] border border-gray-600 rounded-2xl p-1 text-white text-xs transition-all duration-300 ease-in-out hover:bg-gray-700 hover:border-gray-400" onClick={() => handleRemove(satellite)}>
@@ -333,21 +340,21 @@ setAddToCartId((prev) => prev.filter((id) => id !== String(satellite.id)));
            {isLoading ?  'Checkout': <FadeLoader size={2} color="#ffffff" /> }
         </Button> */}
         <Button
-      onClick={() => handleSubmit()}
-      className={`w-full flex justify-center items-center ${isLoading ? 'bg-[#2b3a4a]' : 'bg-[#2b3a4a]'} 
+          onClick={() => handleSubmit()}
+          className={`w-full flex justify-center items-center ${isLoading ? 'bg-[#2b3a4a]' : 'bg-[#2b3a4a]'} 
         ${isLoading ? 'hover:bg-[#2b3a4a]' : 'hover:bg-[#28455e] hover:text-white'}
         ${isLoading ? 'cursor-wait' : 'cursor-pointer'}`}
-    >
-      {isLoading ? (
-        // 'Buying...'
-        // <FadeLoader size={10} color="#ffffff" />
-        <>
-         <PulseLoader size={4} color="#ffffff" />
-        </>
-      ) : (
-        'Buy'
-      )}
-    </Button>
+        >
+          {isLoading ? (
+            // 'Buying...'
+            // <FadeLoader size={10} color="#ffffff" />
+            <>
+              <PulseLoader size={4} color="#ffffff" />
+            </>
+          ) : (
+            'Buy'
+          )}
+        </Button>
 
       </div>
     </div>
