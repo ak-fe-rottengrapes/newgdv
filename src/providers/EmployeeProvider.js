@@ -12,7 +12,7 @@ export const useEmployeeContext = () => useContext(EmployeeContext)
 const EmployeeProvider = ({ children }) => {
  
   const [map,setMap] = useState()
-  let [geoJson, setGeoJson] = useState();
+  const [geoJson, setGeoJson] = useState();
   
   const values = {
     map,setMap,

@@ -11,13 +11,13 @@ import { defaults } from "ol/control";
 import { OSM, Vector as VectorSource } from "ol/source";
 import { Vector as VectorLayer } from "ol/layer";
 import { GeoJSON } from "ol/format";
-import { useEmployeeContext } from "@/providers/EmployeeProvider";
 import { polygon } from "@turf/turf";
+import { useAdmin } from "@/app/context/AdminContext";
 
 
 const MapComponent = ({satelliteData}) => {
   const mapElement = useRef();
-  const { map, setMap, geoJson, setGeoJson } = useEmployeeContext()
+  const { map, setMap, geoJson, setGeoJson } = useAdmin()
   const [geoJsonLayer, setGeoJsonLayer] = useState(null);
 
   useEffect(()=>{

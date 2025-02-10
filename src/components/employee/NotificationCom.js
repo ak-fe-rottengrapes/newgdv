@@ -71,7 +71,6 @@ const NotificationCom = () => {
                                         {ele.description}
                                     </p>
                                 </div>
-                                <RequestDialog show={show} setShow={setShow} orderId={orderId}>
                                     <button
                                         className="p-2 border border-white rounded text-xs font-bold text-white hover:bg-white hover:text-black"
                                         id={ele.order}
@@ -80,7 +79,7 @@ const NotificationCom = () => {
                                     >
                                         Check Request
                                     </button>
-                                </RequestDialog>
+                              
                             </div>
                         );
                     })
@@ -88,6 +87,8 @@ const NotificationCom = () => {
                     <NotificationLoader />
                 )}
             </div>
+            <RequestDialog show={show} setShow={setShow} orderId={orderId}>
+            </RequestDialog>
         </div>
     )
 }

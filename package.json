@@ -16,6 +16,7 @@
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-popover": "^1.1.6",
     "@radix-ui/react-scroll-area": "^1.2.2",
+    "@radix-ui/react-select": "^2.1.6",
     "@radix-ui/react-separator": "^1.1.1",
     "@radix-ui/react-slider": "^1.2.2",
     "@radix-ui/react-slot": "^1.1.1",
@@ -35,10 +36,7 @@
     "ol": "^10.3.1",
     "react": "^19.0.0",
     "react-data-table-component": "^7.6.2",
-<<<<<<< HEAD
     "react-date-range": "^2.0.1",
-=======
->>>>>>> f13cf0b6b6bad5abbad56f9c10079f818c8341d6
     "react-dom": "^19.0.0",
     "react-dropzone": "^14.3.5",
     "react-hook-form": "^7.54.2",

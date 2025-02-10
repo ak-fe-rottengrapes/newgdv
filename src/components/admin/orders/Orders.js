@@ -25,8 +25,9 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import RequestDialog from './RequestDialog';
+import RequestDialog from '../dialogs/RequestDialog';
 import { useAdmin } from '@/app/context/AdminContext';
+import { useRouter } from 'next/navigation';
 
 const Orders = () => {
     const [loading, setLoading] = useState(false);
@@ -34,12 +35,13 @@ const Orders = () => {
     const [list, setList] = useState([]);
     const [filteredList, setFilteredList] = useState([]);
     const [filter, setFilter] = useState("All");
+    const router = useRouter();
 
     const {
         orderId,
-    setOrderId,
+        setOrderId,
     } = useAdmin();
-    
+
     const fetchOrderList = async (accessToken) => {
         setLoading(true);
         try {
@@ -115,7 +117,7 @@ const Orders = () => {
                     </span>
                 </div>
                 <div className='flex gap-2 items-center'>
-                    <Trash2 size={16} color='#ffffff' />
+                    {/* <Trash2 size={16} color='#ffffff' /> */}
                 </div>
             </div>
             <div className='flex flex-col overflow-y-auto h-[calc(100vh-143px)] border rounded-md border-gray-500 shadow-lg p-2 w-full mt-2'>
@@ -240,20 +242,14 @@ const Orders = () => {
                                                 {`Order Date: ${new Date(ele.created_at).toLocaleDateString()}`}
                                             </p>
                                             <div className="w-fill flex justify-center items-center mt-3">
-                                                <RequestDialog>
-                                                <Button
-                                                    className="p-2 bg-[#2b3a4a] border  rounded text-xs font-bold hover:bg-[#384b5f] hover:text-white "
-                                                    id={ele.id}
-                                                    onClick={() => {
-                                                        setOrderId(ele.id)
-                                                        // console.log(orderId)
-                                                        // setDailogBoxName("admin");
-                                                        // setDailogOpen(true);
-                                                    }}
-                                                >
-                                                    check request
-                                                </Button>
-                                                </RequestDialog>
+                                                    <Button
+                                                        className="p-2 bg-[#2b3a4a] border  rounded text-xs font-bold hover:bg-[#384b5f] hover:text-white "
+                                                        id={ele.id}
+                                                        onClick={() => router.push('/admin/order?orderId=' + ele.id)}
+                                                        >
+                                                        check request
+                                                    </Button>
+                                                        
                                             </div>
                                         </div>
                                     </div>
@@ -263,6 +259,7 @@ const Orders = () => {
                     </>
                 )}
             </div>
+            <RequestDialog orderId={orderId}></RequestDialog>
         </div>
     )
 }

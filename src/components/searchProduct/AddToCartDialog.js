@@ -613,10 +613,21 @@ const AddToCartDialog = ({ addToCart, setAddToCart, clickedCard, setClickedCard 
     };
     
     const handleAddToCart = () => {
+        if (!drawOrFull || !drawPolygon) {
+            toast({
+                title: 'Error',
+                description: 'Please select Full Image or Draw Polygon first.',
+                variant: 'destructive',
+                duration: 2000
+            });
+            return;
+        }
+
         setSatelliteDataByName();
         setSatelliteDetailsByName();
         if (!clickedCard) return;
-        setAddToCart(false)
+        
+        setAddToCart(false);
         setDrawPolygon(null);
         setDrawOrFull('');
         if (vectorLayer) {

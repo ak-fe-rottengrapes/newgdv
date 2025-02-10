@@ -20,14 +20,24 @@ import { TiTick } from "react-icons/ti";
 import { CommentDialog } from "./CommentDialog"
 import { OperatorsDialog } from "./OperatorsDialog"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useAdmin } from "@/app/context/AdminContext"
+import { getEmployeeList } from "@/components/services/admin/employeeList/api"
+import { EmployeeCombobox } from "./SelectEmp"
+import { Check, Trash2 } from "lucide-react"
+import { assignEmployee } from "@/components/services/admin/orders/api"
+import { RejectDialog } from "./SelectEmp"
 
-export default function RequestDialog({ children, show, setShow, orderId }) {
+export default function RequestDialog({ children, show, setShow }) {
   const { data: session } = useSession()
-  const { setGeoJson } = useEmployeeContext()
+  const { setOrderId,
+    geoJson,
+    setGeoJson,
+    map,
+    setMap } = useAdmin()
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   let [orderData, setOrderData] = useState({});
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+
   let [orderProp, setOrderProp] = useState({});
   const [link, setLink] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +45,12 @@ export default function RequestDialog({ children, show, setShow, orderId }) {
   const [comments, setComments] = useState([])
   const [tableData, setTableData] = useState([]);
   const searchParam = useSearchParams()
+
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null)
+  const orderId = searchParam.get("orderId")
   const router = useRouter()
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+
   const handleAddLink = async (e) => {
     setLoading(true)
     e.preventDefault()
@@ -51,7 +66,7 @@ export default function RequestDialog({ children, show, setShow, orderId }) {
         className: "bg-green-200",
         duration: 2000
       })
-    
+
     } catch (error) {
       toast({
         title: "Error",
@@ -68,6 +83,7 @@ export default function RequestDialog({ children, show, setShow, orderId }) {
       const newParams = new URLSearchParams(searchParam);
       newParams.delete("orderId");
       router.replace(`?${newParams.toString()}`);
+      setSelectedEmployeeId(null);
     }
   };
 
@@ -106,15 +122,14 @@ export default function RequestDialog({ children, show, setShow, orderId }) {
 
     return `${day}/${month}/${year}`;
   };
-
-
-
+  const [empList, setEmpList] = useState([])
   const fetchOrderDetailes = async () => {
     setIsLoading(true);
     if (session?.user?.access && orderId) {
       try {
         const response = await getOrderDetails(session.user.access, orderId);
-        console.log(response)
+        const emp = await getEmployeeList(session.user.access);
+        setEmpList(emp)
         setComments(response.comments)
         const orderDetails = response.order.properties;
         setOrderProp(orderDetails);
@@ -139,6 +154,7 @@ export default function RequestDialog({ children, show, setShow, orderId }) {
         }
 
 
+
         setGeoJson({
           type: "FeatureCollection",
           features: features,
@@ -159,12 +175,69 @@ export default function RequestDialog({ children, show, setShow, orderId }) {
     }
   };
   useEffect(() => {
-    if ( session?.user?.access && orderId) {
+    if (session?.user?.access && orderId) {
       fetchOrderDetailes(session?.user?.access, orderId)
     }
   }, [session?.user?.access, orderId])
+
+  const onAssignEmployeeHandler = async (e) => {
+    e.preventDefault();
+
+    if (!selectedEmployeeId) {
+      toast.error("Please select an employee");
+      return;
+    }
+
+    const data = {
+      employee_id: selectedEmployeeId,
+    };
+
+    if (session?.user?.access && orderId) {
+      setLoading(true);
+      try {
+        const response = await assignEmployee(session.user.access, orderId, data);
+        toast({
+          title: "Success",
+          description: response.message,
+          variant: "success",
+          className: "bg-green-200",
+          duration: 2000
+        });
+        setOrderProp((prev) => ({
+          ...prev,
+          order_status: "approved"
+        }));
+        setOrderProp((prev) => ({
+          ...prev,
+          employee: selectedEmployeeId
+        }))
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+          duration: 2000
+        });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Session or order id is invalid",
+        variant: "destructive",
+        duration: 2000
+      });
+    }
+  };
+
+  const onRejectOpen = (e) => {
+    e.preventDefault();
+    setRejectDialogOpen(true);
+  }
+
   return (
-    <Dialog open={searchParam.get("orderId") ? true : false}  onOpenChange={handleOpenChange}>
+    <Dialog open={searchParam.get("orderId") ? true : false} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
@@ -174,79 +247,102 @@ export default function RequestDialog({ children, show, setShow, orderId }) {
         </DialogHeader>
         {isLoading ? (
           <div className="flex">
-          {/* Left Side (Map and Form) */}
-          <div className="w-1/2 mr-4">
-            {/* Map Skeleton */}
-            <div className="mr-2 w-full h-2/3 rounded-md border-2 border-gray-700 p-1 bg-gray-800 animate-pulse">
-              <div className="w-full h-full bg-gray-700 rounded-md"></div>
-            </div>
+            {/* Left Side (Map and Form) */}
+            <div className="w-1/2 mr-4">
+              {/* Map Skeleton */}
+              <div className="mr-2 w-full h-2/3 rounded-md border-2 border-gray-700 p-1 bg-gray-800 animate-pulse">
+                <div className="w-full h-full bg-gray-700 rounded-md"></div>
+              </div>
 
-            {/* Form Skeleton */}
-            <div className="w-full flex flex-col mt-2">
-              <div className="w-full flex flex-col">
-                <div className="my-1 h-4 w-1/3 bg-gray-700 rounded-md animate-pulse"></div>
-                <div className="w-full">
-                  <div className="py-1 rounded-md border bg-gray-800 border-black w-full h-10 bg-gray-700 animate-pulse"></div>
-                  <div className="bg-gray-600 py-1 rounded hover:bg-gray-700 text-white font-medium my-2 flex justify-center items-center w-full h-8 bg-gray-700 animate-pulse"></div>
-                  {/* <div className="bg-gray-600 w-full py-1 hover:bg-gray-700 rounded text-white font-medium flex justify-center items-center h-8 bg-gray-700 animate-pulse"></div> */}
+              {/* Form Skeleton */}
+              <div className="w-full flex flex-col mt-2">
+                <div className="w-full flex flex-col">
+                  <div className="my-1 h-4 w-1/3 bg-gray-700 rounded-md animate-pulse"></div>
+                  <div className="w-full">
+                    <div className="py-1 rounded-md border bg-gray-800 border-black w-full h-10 bg-gray-700 animate-pulse"></div>
+                    <div className="bg-gray-600 py-1 rounded hover:bg-gray-700 text-white font-medium my-2 flex justify-center items-center w-full h-8 bg-gray-700 animate-pulse"></div>
+                    <div className="bg-gray-600 w-full py-1 hover:bg-gray-700 rounded text-white font-medium flex justify-center items-center h-8 bg-gray-700 animate-pulse"></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Side (Order Details and Buttons) */}
-          <div className="min-h-full max-h-screen w-[45%]">
-            {/* Order Details Skeleton */}
-            <div className="border border-gray-500 shadow rounded-md grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 grid-cols-1">
-              {[...Array(8)].map((_, index) => (
-                <div key={index} className="p-2 w-full rounded-md flex flex-col">
-                  <div className="whitespace-nowrap h-4 w-1/2 bg-gray-700 rounded-md animate-pulse"></div>
-                  <div className="bg-gray-700 rounded-md w-full p-1 h-8 mt-1 animate-pulse"></div>
-                </div>
-              ))}
-            </div>
+            {/* Right Side (Order Details and Buttons) */}
+            <div className="min-h-full max-h-screen w-[45%]">
+              {/* Order Details Skeleton */}
+              <div className="border border-gray-500 shadow rounded-md grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 grid-cols-1">
+                {[...Array(8)].map((_, index) => (
+                  <div key={index} className="p-2 w-full rounded-md flex flex-col">
+                    <div className="whitespace-nowrap h-4 w-1/2 bg-gray-700 rounded-md animate-pulse"></div>
+                    <div className="bg-gray-700 rounded-md w-full p-1 h-8 mt-1 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
 
-            {/* Buttons Skeleton */}
-            <div>
-              <div className="w-full bg-gray-800 hover:bg-gray-700 my-3 p-2 text-gray-100 flex justify-center items-center rounded-md h-10 bg-gray-700 animate-pulse"></div>
-              <div className="w-full bg-gray-800 hover:bg-gray-700 my-3 p-2 text-gray-100 flex justify-center items-center rounded-md h-10 bg-gray-700 animate-pulse"></div>
+              {/* Buttons Skeleton */}
+              <div>
+                <div className="w-full bg-gray-800 hover:bg-gray-700 my-3 p-2 text-gray-100 flex justify-center items-center rounded-md h-10 bg-gray-700 animate-pulse"></div>
+                <div className="w-full bg-gray-800 hover:bg-gray-700 my-3 p-2 text-gray-100 flex justify-center items-center rounded-md h-10 bg-gray-700 animate-pulse"></div>
+              </div>
             </div>
           </div>
-        </div> 
         ) : (
           <div className="flex ">
             <div className="w-1/2 mr-4">
               <div className="mr-2 w-full h-2/3 rounded-md border-2 border-gray-700 p-1 bg-gray-800">
-                <MapComponent satelliteData={operatorData}/>
+                <MapComponent satelliteData={operatorData} />
               </div>
               <div className="w-full flex flex-col">
                 <form className="w-full mt-2">
-                  <div className="mb-4">
-                    <label htmlFor="linkInput" className="block text-sm font-medium text-gray-300 mb-1">
-                      Enter Link:
-                    </label>
-                    <input
-                      id="linkInput"
-                      type="text"
-                      defaultValue={orderData?.order?.properties?.imagery_url}
-                      className="w-full p-2 border border-gray-600 rounded-md bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      onChange={(e) => setLink(e.target.value)}
-                      placeholder="https://example.com"
-                    />
-                  </div>
+                  <div className="w-full flex flex-col">
+                    <p className="my-1">Assign task to:- </p>
 
-                  <button
-                    className="bg-green-700 py-1 rounded hover:bg-green-800 text-gray-100 font-medium my-2 flex justify-center items-center w-full disabled:opacity-50"
-                    onClick={handleAddLink}
-                    disabled={isLoading}
-                  >
-                    <TiTick className="text-2xl text-gray-100" />
-                    {loading
-                      ? "Sending..."
-                      : orderData?.order?.properties?.imagery_url
-                        ? "Edit Link"
-                        : "Send Link"}
-                  </button>
+                    <div className="w-full">
+                      <select
+                        className="py-1 rounded-md border bg-gray-800 border-black w-full"
+                        value={selectedEmployeeId || ""}
+                        onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                      >
+                        {!selectedEmployeeId && <option value="">Select Employee</option>}
+                        {empList.length > 0 ? (
+                          empList.map((employee) => (
+                            <option key={employee.id} value={employee.id}>
+                              {employee.first_name} {employee.last_name}
+                            </option>
+                          ))
+                        ) : (
+                          <option>Loading...</option>
+                        )}
+                      </select>
+
+                      <button
+                        className="bg-green-600 py-1 rounded  hover:bg-green-700
+               text-white font-medium my-2 flex justify-center items-center w-full"
+                        onClick={onAssignEmployeeHandler}
+                        disabled={isLoading}
+                      >
+                        {/* <TiTick className="text-2xl text-white" /> */}
+                        <Check />
+                        {orderProp.employee
+                          ? (loading ? "Reassigning..." : "Reassign")
+                          : (loading ? "Assigning..." : "Assign Task")}
+
+
+                      </button>
+                      {orderProp.order_status === "approved" ? (
+                        <div></div>
+                      ) : (
+
+                        <button
+                          className="bg-red-600 w-full py-1  hover:bg-red-700 rounded text-white font-medium flex justify-center items-center"
+                          onClick={(e) => onRejectOpen(e)}
+                        >
+                          <Trash2 className="mr-1" />
+                          Reject Request
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </form>
               </div>
             </div>
@@ -296,6 +392,12 @@ export default function RequestDialog({ children, show, setShow, orderId }) {
               Save changes
             </Button> */}
         </DialogFooter>
+        <RejectDialog
+          open={rejectDialogOpen}
+          onOpenChange={setRejectDialogOpen}
+          orderId={orderId}
+          setOrderProp={setOrderProp}
+        />
       </DialogContent>
     </Dialog>
   )

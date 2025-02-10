@@ -201,7 +201,6 @@ function Orders() {
                                         {`Order Date: ${new Date(ele.created_at).toLocaleDateString()}`}
                                     </p>
                                     <div className="w-fill flex justify-center items-center mt-3">
-                                        <RequestDialog show={show} setShow={setShow} orderId={orderId}>
                                             <button
                                                 className="p-2 border border-white rounded text-xs font-bold hover:bg-black hover:text-white "
                                                 id={ele.id}
@@ -209,7 +208,7 @@ function Orders() {
                                             >
                                                 check request
                                             </button>
-                                        </RequestDialog>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -217,7 +216,8 @@ function Orders() {
                     })
                 }
             </div>
-
+            <RequestDialog show={show} setShow={setShow} orderId={orderId}>
+            </RequestDialog>
         </div>
     )
 }

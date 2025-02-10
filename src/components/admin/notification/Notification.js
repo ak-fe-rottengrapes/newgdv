@@ -4,8 +4,13 @@ import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/hooks/use-toast'
 import { User } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import RequestDialog from '../dialogs/RequestDialog'
 
 const Notification = () => {
+    const router = useRouter()
+    const searchParam = useSearchParams()
+    const orderId = searchParam.get('orderId')
     const { toast } = useToast()
     const { data: session } = useSession()
     const [loading, setLoading] = useState(false)
@@ -62,15 +67,11 @@ const Notification = () => {
                                 <button
                                     className="p-2 border border-white rounded text-xs font-bold text-white hover:bg-[#384b5f] "
                                     id={ele.order}
-                                    onClick={() => {
-                                        setOrderId(ele.order)
-                                        console.log(orderId)
-                                        setDailogBoxName("admin");
-                                        setDailogOpen(true);
-                                    }}
+                                    onClick={() => router.push('/admin/notification?orderId=' + ele.order)}
                                 >
                                     Check Request
                                 </button>
+
                             </div>
                         );
                     })
@@ -88,7 +89,10 @@ const Notification = () => {
                     </div>
                 )}
             </div>
+            <RequestDialog orderId={orderId}>
+            </RequestDialog>
         </div>
+
     )
 }
 
